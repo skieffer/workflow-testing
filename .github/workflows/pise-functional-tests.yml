@@ -117,12 +117,16 @@ jobs:
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          pfsc deploy generate --gdb re --pfsc-tag ${{ env.TEST_TAG }} \
-              --oca-tag ${{ env.TEST_TAG }} -n 1 --demos \
+          pfsc deploy generate --gdb re \
+              --pfsc-tag ${{ env.TEST_TAG }} \
+              --oca-tag ${{ env.TEST_TAG }} \
+              --official \
+              -n 1 --demos \
               --dirname ${{ env.TEST_DEPLOY_DIR }} \
               --flask-config dockerdev \
               --mount-code
           cat ../server/instance/.env
+          cat ${{ format('{0}/proofscape/deploy/{1}/mca-docker-compose.yml', github.workspace, env.TEST_DEPLOY_DIR) }}
       # -----------------------------------------
       # Make test repos
       - name: Make test repos
