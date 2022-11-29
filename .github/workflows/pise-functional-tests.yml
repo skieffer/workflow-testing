@@ -1,0 +1,96 @@
+name: pise-functional-tests
+on: workflow_dispatch
+jobs:
+  functional-tests:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      TEST_TAG: testing
+      TEST_DEPLOY_DIR: testing
+      REDIS_URI: redis://localhost:6379
+      GRAPHDB_URI: redis://localhost:6381
+      PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
+      PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
+      SECRET_KEY: fixed_value_for_testing
+    steps:
+      # -----------------------------------------
+      # Install Python
+      - name: Install Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+      # -----------------------------------------
+      # Checkout pise
+      - name: Checkout pise
+        uses: actions/checkout@v3
+        with:
+          path: 'pise'
+          # FIXME
+          repository: 'skieffer/pfsc-server'
+          ref: 'recombine'
+      # -----------------------------------------
+      # Install manage/venv, preferably from cache
+      - name: Cache manage/venv
+        id: cache-manage-venv
+        uses: actions/cache@v3
+        with:
+          path: pise/manage/venv
+          key: cache-manage-venv-${{ hashFiles('pise/manage/setup.py') }}
+      - if: ${{ steps.cache-manage-venv.outputs.cache-hit != 'true' }}
+        name: Install manage/venv
+        working-directory: pise/manage
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -e .
+      # -----------------------------------------
+      # Install server/venv, preferably from cache
+      - name: Cache server/venv
+        id: cache-server-venv
+        uses: actions/cache@v3
+        with:
+          path: pise/server/venv
+          key: cache-server-venv-${{ hashFiles('pise/server/req/*') }}
+      - if: ${{ steps.cache-server-venv.outputs.cache-hit != 'true' }}
+        name: Install server/venv
+        working-directory: pise/server
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          ./req/install.sh
+      # -----------------------------------------
+      # Install client/node_modules, preferably from cache
+      - name: Cache client/node_modules
+        id: cache-client-node_modules
+        uses: actions/cache@v3
+        with:
+          path: pise/client/node_modules
+          key: cache-client-node_modules-${{ hashFiles('pise/client/package-lock.json') }}
+      - if: ${{ steps.cache-client-node_modules.outputs.cache-hit != 'true' }}
+        name: Install client/node_modules
+        working-directory: pise/client
+        run: npm install
+      # -----------------------------------------
+      # -----------------------------------------
+      # Build directories with pfsc makestruct -y
+      - name: makestruct
+        working-directory: pise/manage
+        run: |
+          cp sample_conf.py conf.py
+          source venv/bin/activate
+          pfsc makestruct -y
+          ls -l ~
+          ls -l ~/proofscape
+      # -----------------------------------------
+      # Make test repos
+      - name: Make test repos
+        working-directory: pise/server
+        run: |
+          git config --global user.email "pfsc.test.runner@localhost"
+          git config --global user.name "pfsc test runner"
+          python -m tests.util.make_repos
+          ls -l ~/proofscape/lib/test
