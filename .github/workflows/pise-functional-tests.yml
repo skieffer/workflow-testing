@@ -158,3 +158,13 @@ jobs:
         with:
           name: pfsc-server-context.tar.gz
           path: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+      # -----------------------------------------
+      # Use buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+          load: true
+          tags: ${{ env.TEST_TAG }}
