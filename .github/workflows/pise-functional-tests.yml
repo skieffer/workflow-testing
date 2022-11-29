@@ -162,6 +162,10 @@ jobs:
       # Use buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      # Check for presence of tar file
+      - name: Check for presence of tar file
+        run: |
+          ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
       - name: Build and export to Docker
         uses: docker/build-push-action@v3
         with:
