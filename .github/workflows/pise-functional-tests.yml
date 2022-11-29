@@ -10,6 +10,7 @@ jobs:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
       TEST_TAG: testing
       TEST_DEPLOY_DIR: testing
+      chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       #REDIS_URI: redis://localhost:6379
       #GRAPHDB_URI: redis://localhost:6381
       #PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
@@ -92,8 +93,6 @@ jobs:
       - name: Cache chromedriver
         id: cache-chromedriver
         uses: actions/cache@v3
-        env:
-          chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
         with:
           path: /usr/local/bin/chromedriver
           key: cache-chromedriver-${{ env.chromedriver-url }}
