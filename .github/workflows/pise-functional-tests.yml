@@ -88,6 +88,22 @@ jobs:
         working-directory: pise/client
         run: npm install
       # -----------------------------------------
+      # Install chromedriver, preferably from cache
+      - name: Cache chromedriver
+        id: cache-chromedriver
+        uses: actions/cache@v3
+        env:
+          chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
+        with:
+          path: /usr/local/bin/chromedriver
+          key: cache-chromedriver-${{ env.chromedriver-url }}
+      - if: ${{ steps.cache-chromedriver.outputs.cache-hit != 'true' }}
+        name: Install chromedriver
+        run: |
+          wget ${{ env.chromedriver-url }}
+          unzip chromedriver_linux64.zip
+          mv chromedriver /usr/local/bin/
+      # -----------------------------------------
       # SET UP
       # -----------------------------------------
       # Build directories with pfsc makestruct -y
