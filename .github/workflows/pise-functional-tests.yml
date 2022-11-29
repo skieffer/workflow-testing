@@ -97,3 +97,10 @@ jobs:
           git config --global user.name "pfsc test runner"
           source venv/bin/activate
           python -m tests.util.make_repos
+      # -----
+      # See what we got
+      - name: See what we got
+        run: |
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/test', github.workspace) }}
