@@ -44,12 +44,18 @@ jobs:
           path: pise/manage/venv
           key: cache-manage-venv-${{ hashFiles('pise/manage/setup.py') }}
       - if: ${{ steps.cache-manage-venv.outputs.cache-hit != 'true' }}
-        name: Install manage/venv
+        name: Form the manage/venv directory
         working-directory: pise/manage
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
+      - name: Do editable install of pfsc-manage
+        # Need this even if cache hit for venv dir, else will get error:
+        #   importlib.metadata.PackageNotFoundError: pfsc-manage
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
           pip install -e .
       # -----------------------------------------
       # Install server/venv, preferably from cache
