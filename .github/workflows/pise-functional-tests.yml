@@ -31,6 +31,12 @@ jobs:
           repository: 'skieffer/pfsc-server'
           ref: 'recombine'
       # -----------------------------------------
+      - name: just for edification
+        working-directory: pise
+        run: |
+          ls -l .
+          pwd -P
+      # -----------------------------------------
       # Install manage/venv, preferably from cache
       - name: Cache manage/venv
         id: cache-manage-venv
@@ -92,5 +98,6 @@ jobs:
         run: |
           git config --global user.email "pfsc.test.runner@localhost"
           git config --global user.name "pfsc test runner"
+          source venv/bin/activate
           python -m tests.util.make_repos
           ls -l ~/proofscape/lib/test
