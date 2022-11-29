@@ -7,6 +7,7 @@ jobs:
       run:
         shell: bash
     env:
+      PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
       TEST_TAG: testing
       TEST_DEPLOY_DIR: testing
       REDIS_URI: redis://localhost:6379
@@ -33,9 +34,7 @@ jobs:
       # -----------------------------------------
       - name: just for edification
         working-directory: pise
-        run: |
-          ls -l .
-          pwd -P
+        run: pwd -P
       # -----------------------------------------
       # Install manage/venv, preferably from cache
       - name: Cache manage/venv
@@ -89,8 +88,6 @@ jobs:
           cp sample_conf.py conf.py
           source venv/bin/activate
           pfsc makestruct -y
-          ls -l ~
-          ls -l ~/proofscape
       # -----------------------------------------
       # Make test repos
       - name: Make test repos
@@ -100,4 +97,3 @@ jobs:
           git config --global user.name "pfsc test runner"
           source venv/bin/activate
           python -m tests.util.make_repos
-          ls -l ~/proofscape/lib/test
