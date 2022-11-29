@@ -165,6 +165,6 @@ jobs:
       - name: Build and export to Docker
         uses: docker/build-push-action@v3
         with:
-          context: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+          context: file://${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
           load: true
           tags: ${{ env.TEST_TAG }}
