@@ -10,12 +10,14 @@ jobs:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
       TEST_TAG: testing
       TEST_DEPLOY_DIR: testing
-      REDIS_URI: redis://localhost:6379
-      GRAPHDB_URI: redis://localhost:6381
-      PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
-      PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
-      SECRET_KEY: fixed_value_for_testing
+      #REDIS_URI: redis://localhost:6379
+      #GRAPHDB_URI: redis://localhost:6381
+      #PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
+      #PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
+      #SECRET_KEY: fixed_value_for_testing
     steps:
+      # -----------------------------------------
+      # INSTALL
       # -----------------------------------------
       # Install Python
       - name: Install Python
@@ -86,6 +88,7 @@ jobs:
         working-directory: pise/client
         run: npm install
       # -----------------------------------------
+      # SET UP
       # -----------------------------------------
       # Build directories with pfsc makestruct -y
       - name: makestruct
@@ -94,6 +97,17 @@ jobs:
           cp sample_conf.py conf.py
           source venv/bin/activate
           pfsc makestruct -y
+      # -----------------------------------------
+      - name: Generate a deployment directory
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc deploy generate --gdb re --pfsc-tag ${{ env.TEST_TAG }} \
+              --oca-tag ${{ env.TEST_TAG }} -n 1 --demos \
+              --dirname ${{ env.TEST_DEPLOY_DIR }} \
+              --flask-config dockerdev \
+              --mount-code
+          cat ../server/instance/.env
       # -----------------------------------------
       # Make test repos
       - name: Make test repos
