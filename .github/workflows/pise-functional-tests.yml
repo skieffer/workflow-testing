@@ -13,11 +13,6 @@ jobs:
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       PYODIDE_SERVE_LOCALLY: 0
-      #REDIS_URI: redis://localhost:6379
-      #GRAPHDB_URI: redis://localhost:6381
-      #PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
-      #PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
-      #SECRET_KEY: fixed_value_for_testing
     steps:
       # -----------------------------------------
       # INSTALL
