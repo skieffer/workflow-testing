@@ -210,9 +210,9 @@ jobs:
         working-directory: ${{ env.PFSC_ROOT }}
         run: |
           mkdir -p selenium_results/docker_logs
-          docker logs ${{ env.TEST_DEPLOY_DIR }}-nginx-1 > selenium_results/docker_logs/nginx-1.txt
-          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscweb-1 > selenium_results/docker_logs/pfscweb-1.txt
-          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-nginx-1 > selenium_results/docker_logs/nginx-1.txt 2>&1
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscweb-1 > selenium_results/docker_logs/pfscweb-1.txt 2>&1
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt 2>&1
       - name: Upload selenium results
         if: always()
         uses: actions/upload-artifact@v2
