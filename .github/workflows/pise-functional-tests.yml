@@ -166,9 +166,16 @@ jobs:
       - name: Check for presence of tar file
         run: |
           ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
+      # Extract the context
+      - name: Make context dir
+        run: mkdir ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+      - name: Extract context
+        working-directory: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+        run: tar -x -f ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+      # Build
       - name: Build and export to Docker
         uses: docker/build-push-action@v3
         with:
-          context: file://${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+          context: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
           load: true
           tags: ${{ env.TEST_TAG }}
