@@ -117,6 +117,12 @@ jobs:
           source venv/bin/activate
           pfsc makestruct -y
       # -----------------------------------------
+      # Build client-side code
+      - name: Build client-side code
+        working-directory: pise/client
+        run: npm run build:dev
+      # -----------------------------------------
+      # Generate deployment directory
       - name: Generate a deployment directory
         working-directory: pise/manage
         run: |
