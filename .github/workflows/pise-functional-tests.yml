@@ -205,12 +205,17 @@ jobs:
         run: |
           source venv/bin/activate
           pytest tests/selenium/test_basic_run_01.py
-      - name: Store final screenshot
-        # Want previous step to be marked as failure if it fails,
-        # but we still want to do this step. So we use `if: always()`
-        # here instead of `continue-on-error: true` there.
+      - name: Record docker logs
+        if: always()
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          mkdir -p selenium_results/docker_logs
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-nginx-1 > selenium_results/docker_logs/nginx-1.txt
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscweb-1 > selenium_results/docker_logs/pfscweb-1.txt
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt
+      - name: Upload selenium results
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: sel_basic_run_01.png
-          path: ${{ env.PFSC_ROOT }}/selenium_screenshots/TestBasicRun01.png
+          name: selenium_results
+          path: ${{ env.PFSC_ROOT }}/selenium_results
