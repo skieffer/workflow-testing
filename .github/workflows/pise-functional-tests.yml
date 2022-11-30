@@ -16,7 +16,7 @@ jobs:
       # The file owner should be the linux username who needs to own the files
       # and directories under PFSC_ROOT, so that during the Selenium tests the
       # pfsc-worker container can write to these files.
-      FILE_OWNER: docker
+      FILE_OWNER: runner
       # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
       # various types of output; set to 2 for more debugging output like
       # uploading certain artifacts for inspection.
