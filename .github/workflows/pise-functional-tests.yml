@@ -13,8 +13,9 @@ jobs:
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       PYODIDE_SERVE_LOCALLY: 0
-      # Set DEBUG_WORKFLOW to 1 to add debugging steps like printing various
-      # types of output and uploading certain artifacts for inspection.
+      # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
+      # various types of output; set to 2 for more debugging output like
+      # uploading certain artifacts for inspection.
       DEBUG_WORKFLOW: 1
     steps:
       # -----------------------------------------
@@ -35,7 +36,7 @@ jobs:
           repository: 'skieffer/pfsc-server'
           ref: 'recombine'
       # -----------------------------------------
-      - if: ${{ env.DEBUG_WORKFLOW == 1 }}
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check working directory of pise
         working-directory: pise
         run: pwd -P
@@ -127,7 +128,7 @@ jobs:
               --dirname ${{ env.TEST_DEPLOY_DIR }} \
               --flask-config dockerdev \
               --mount-code
-      - if: ${{ env.DEBUG_WORKFLOW == 1 }}
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Examine deployment code
         working-directory: ${{ format('{0}/proofscape/deploy/{1}', github.workspace, env.TEST_DEPLOY_DIR) }}
         run: |
@@ -153,7 +154,7 @@ jobs:
           source venv/bin/activate
           python -m tests.util.make_repos
       # List test repo owners
-      - if: ${{ env.DEBUG_WORKFLOW == 1 }}
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: List test repo owners
         run: ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
       # -----------------------------------------
@@ -164,8 +165,8 @@ jobs:
           source venv/bin/activate
           pfsc build server --tar-path=${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
       # -----------------------------------------
-      # Upload as artifact for inspection
-      - if: ${{ env.DEBUG_WORKFLOW == 1 }}
+      # Upload tar file as artifact for inspection
+      - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
         name: Upload pfsc-server context tar file as artifact
         uses: actions/upload-artifact@v2
         with:
@@ -176,7 +177,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       # Check for presence of tar file
-      - if: ${{ env.DEBUG_WORKFLOW == 1 }}
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check for presence of pfsc-server tar file
         run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
       # Extract the context
@@ -200,6 +201,7 @@ jobs:
         working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
         run: docker compose -f mca-docker-compose.yml up -d
       # -----------------------------------------
+      # Run Selenium tests
       - name: Run the Selenium tests
         working-directory: pise/manage
         run: |
