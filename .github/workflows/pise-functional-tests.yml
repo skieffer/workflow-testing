@@ -179,3 +179,5 @@ jobs:
           context: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
           load: true
           tags: ${{ env.TEST_TAG }}
+          cache-to: type=gha
+          cache-from: type=gha
