@@ -13,6 +13,10 @@ jobs:
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       PYODIDE_SERVE_LOCALLY: 0
+      # The file owner should be the linux username who needs to own the files
+      # and directories under PFSC_ROOT, so that during the Selenium tests the
+      # pfsc-worker container can write to these files.
+      FILE_OWNER: runner
       # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
       # various types of output; set to 2 for more debugging output like
       # uploading certain artifacts for inspection.
@@ -167,7 +171,6 @@ jobs:
           ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
           ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
           whoami
-          ls /foo/bar
       # -----------------------------------------
       # Make a docker context tar file for pfsc-server
       - name: Make pfsc-server context tar file
@@ -206,6 +209,19 @@ jobs:
           tags: pfsc-server:${{ env.TEST_TAG }}
           cache-to: type=gha
           cache-from: type=gha
+      # -----------------------------------------
+      # Change owner, for write permissions
+      - name: Change file ownership
+        run: chown -R ${{env.FILE_OWNER}}:${{env.FILE_OWNER}} ${{ env.PFSC_ROOT }}
+      # Check the results
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check file ownership
+        run: |
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          whoami
+          ls /foo/bar
       # -----------------------------------------
       # Deploy the MCA
       - name: Deploy MCA
