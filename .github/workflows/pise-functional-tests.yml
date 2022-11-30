@@ -194,3 +194,23 @@ jobs:
           tags: ${{ env.TEST_TAG }}
           cache-to: type=gha
           cache-from: type=gha
+      # -----------------------------------------
+      # Deploy the MCA
+      - name: Deploy MCA
+        working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
+        run: docker compose -f mca-docker-compose.yml up -d
+      # -----------------------------------------
+      - name: Run the Selenium tests
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pytest tests/selenium/test_basic_run_01.py
+      - name: Store final screenshot
+        # Want previous step to be marked as failure if it fails,
+        # but we still want to do this step. So we use `if: always()`
+        # here instead of `continue-on-error: true` there.
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: sel_basic_run_01.png
+          path: selenium_screenshots/TestBasicRun01.png
