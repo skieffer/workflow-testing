@@ -16,7 +16,7 @@ jobs:
       # The file owner should be the linux username who needs to own the files
       # and directories under PFSC_ROOT, so that during the Selenium tests the
       # pfsc-worker container can write to these files.
-      FILE_OWNER: runner
+      FILE_OWNER: docker
       # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
       # various types of output; set to 2 for more debugging output like
       # uploading certain artifacts for inspection.
@@ -190,7 +190,6 @@ jobs:
           ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
           ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
           whoami
-          ls /foo/bar
       # -----------------------------------------
       # Upload tar file as artifact for inspection
       - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
