@@ -162,7 +162,11 @@ jobs:
       # List test repo owners
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: List test repo owners
-        run: ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
+        run: |
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          ls /foo/bar
       # -----------------------------------------
       # Make a docker context tar file for pfsc-server
       - name: Make pfsc-server context tar file
