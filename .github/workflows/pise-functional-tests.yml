@@ -179,6 +179,19 @@ jobs:
           source venv/bin/activate
           pfsc build server --tar-path=${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
       # -----------------------------------------
+      # Change owner, for write permissions
+      - name: Change file ownership
+        run: sudo chown -R ${{env.FILE_OWNER}}:${{env.FILE_OWNER}} ${{ env.PFSC_ROOT }}
+      # Check the results
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check file ownership
+        run: |
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          whoami
+          ls /foo/bar
+      # -----------------------------------------
       # Upload tar file as artifact for inspection
       - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
         name: Upload pfsc-server context tar file as artifact
@@ -209,19 +222,6 @@ jobs:
           tags: pfsc-server:${{ env.TEST_TAG }}
           cache-to: type=gha
           cache-from: type=gha
-      # -----------------------------------------
-      # Change owner, for write permissions
-      - name: Change file ownership
-        run: chown -R ${{env.FILE_OWNER}}:${{env.FILE_OWNER}} ${{ env.PFSC_ROOT }}
-      # Check the results
-      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
-        name: Check file ownership
-        run: |
-          ls -l ${{ format('{0}/proofscape', github.workspace) }}
-          ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
-          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
-          whoami
-          ls /foo/bar
       # -----------------------------------------
       # Deploy the MCA
       - name: Deploy MCA
