@@ -19,6 +19,8 @@ jobs:
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       PYODIDE_SERVE_LOCALLY: 0
       LIB_VOLUME: pfsc-lib
+      BUILD_VOLUME: pfsc-build
+      GDB_VOLUME: pfsc-gdb
       # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
       # various types of output; set to 2 for more debugging output like
       # uploading certain artifacts for inspection.
@@ -143,7 +145,10 @@ jobs:
               -n 1 --demos \
               --dirname ${{ env.TEST_DEPLOY_DIR }} \
               --flask-config dockerdev \
-              --mount-code
+              --mount-code \
+              --lib-vol=${{ env.LIB_VOLUME }} \
+              --build-vol=${{ env.BUILD_VOLUME }} \
+              --gdb-vol=${{ env.GDB_VOLUME }}
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Examine deployment code
         working-directory: ${{ format('{0}/proofscape/deploy/{1}', github.workspace, env.TEST_DEPLOY_DIR) }}
@@ -233,6 +238,12 @@ jobs:
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             pfsc-server:${{ env.TEST_TAG }} \
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
+      # -----------------------------------------
+      # Form `build` and `gdb` volumes
+      - name: Form build and gdb volumes
+        run: |
+          docker volume create ${{env.BUILD_VOLUME}}
+          docker volume create ${{env.GDB_VOLUME}}
       # -----------------------------------------
       # TESTING SHORT OUT
       # -----------------------------------------
