@@ -193,7 +193,7 @@ jobs:
       # Upload tar file as artifact for inspection
       - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
         name: Upload pfsc-server context tar file as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pfsc-server-context.tar.gz
           path: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
@@ -265,7 +265,7 @@ jobs:
           docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt 2>&1
       - name: Upload selenium results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: selenium_results
           path: ${{ env.PFSC_ROOT }}/selenium_results
