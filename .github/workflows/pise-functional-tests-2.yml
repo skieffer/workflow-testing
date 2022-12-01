@@ -128,6 +128,39 @@ jobs:
         working-directory: pise/client
         run: npm run build:dev
       # -----------------------------------------
+      # Generate deployment directory
+      # Note: We have to do this before running the `make_tests` script, since
+      # that needs PFSC_LIB_ROOT to be defined in `instance/.env`, which we get
+      # from the deployment's `local.env` being (automatically) symlinked to there.
+      # TODO: modify to use docker volumes instead of bind-mounts for `lib` and `build` dirs
+      - name: Generate a deployment directory
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc deploy generate --gdb re \
+              --pfsc-tag ${{ env.TEST_TAG }} \
+              --oca-tag ${{ env.TEST_TAG }} \
+              -n 1 --demos \
+              --dirname ${{ env.TEST_DEPLOY_DIR }} \
+              --flask-config dockerdev \
+              --mount-code
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Examine deployment code
+        working-directory: ${{ format('{0}/proofscape/deploy/{1}', github.workspace, env.TEST_DEPLOY_DIR) }}
+        run: |
+          echo "============================"
+          echo "MCA yml"
+          cat mca-docker-compose.yml
+          echo "============================"
+          echo "nginx.conf"
+          cat nginx.conf
+          echo "============================"
+          echo "docker.env"
+          cat docker.env
+          echo "============================"
+          echo "server/instance/.env (local.env)"
+          cat ${{ format('{0}/pise/server/instance/.env', github.workspace) }}
+      # -----------------------------------------
       # Make test repos
       - name: Make test repos
         working-directory: pise/server
@@ -200,38 +233,12 @@ jobs:
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             pfsc-server:${{ env.TEST_TAG }} \
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
+      # -----------------------------------------
+      # TESTING SHORT OUT
+      # -----------------------------------------
       - name: short out
         run: ls /foo/bar
       # -----------------------------------------
-      # Generate deployment directory
-      # TODO: modify to use docker volumes instead of bind-mounts for `lib` and `build` dirs
-      - name: Generate a deployment directory
-        working-directory: pise/manage
-        run: |
-          source venv/bin/activate
-          pfsc deploy generate --gdb re \
-              --pfsc-tag ${{ env.TEST_TAG }} \
-              --oca-tag ${{ env.TEST_TAG }} \
-              -n 1 --demos \
-              --dirname ${{ env.TEST_DEPLOY_DIR }} \
-              --flask-config dockerdev \
-              --mount-code
-      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
-        name: Examine deployment code
-        working-directory: ${{ format('{0}/proofscape/deploy/{1}', github.workspace, env.TEST_DEPLOY_DIR) }}
-        run: |
-          echo "============================"
-          echo "MCA yml"
-          cat mca-docker-compose.yml
-          echo "============================"
-          echo "nginx.conf"
-          cat nginx.conf
-          echo "============================"
-          echo "docker.env"
-          cat docker.env
-          echo "============================"
-          echo "server/instance/.env (local.env)"
-          cat ${{ format('{0}/pise/server/instance/.env', github.workspace) }}
       # -----------------------------------------
       # Deploy the MCA
       - name: Deploy MCA
