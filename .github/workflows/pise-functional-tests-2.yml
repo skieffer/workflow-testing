@@ -134,7 +134,6 @@ jobs:
       # Note: We have to do this before running the `make_tests` script, since
       # that needs PFSC_LIB_ROOT to be defined in `instance/.env`, which we get
       # from the deployment's `local.env` being (automatically) symlinked to there.
-      # TODO: modify to use docker volumes instead of bind-mounts for `lib` and `build` dirs
       - name: Generate a deployment directory
         working-directory: pise/manage
         run: |
@@ -244,12 +243,6 @@ jobs:
         run: |
           docker volume create ${{env.BUILD_VOLUME}}
           docker volume create ${{env.GDB_VOLUME}}
-      # -----------------------------------------
-      # TESTING SHORT OUT
-      # -----------------------------------------
-      - name: short out
-        run: ls /foo/bar
-      # -----------------------------------------
       # -----------------------------------------
       # Deploy the MCA
       - name: Deploy MCA
