@@ -244,3 +244,9 @@ jobs:
         with:
           name: selenium_results
           path: ${{ env.PFSC_ROOT }}/selenium_results
+      # Examine the written files
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Show some written files
+        run: |
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build/test/hist/lit/v0.0.0', github.workspace) }}
