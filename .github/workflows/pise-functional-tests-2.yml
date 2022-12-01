@@ -278,5 +278,5 @@ jobs:
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             --mount 'type=volume,src=${{env.BUILD_VOLUME}},dst=/proofscape/build' \
             pfsc-server:${{ env.TEST_TAG }} \
-            -c "cd ~/proofscape/lib; ls -l test/hist/lit \
-                cd ~/proofscape/build; ls -l test/hist/lit/WIP"
+            -c "cd ~/proofscape/lib; ls -l test/hist/lit; \
+                cd ~/proofscape/build; ls -l test/hist/lit/WIP;"
