@@ -176,10 +176,10 @@ jobs:
           pfsc build server --tar-path=${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
       # -----------------------------------------
       # Change permissions so docker can work
-      - name: Enable group in file permissions
+      - name: Enable group and world in file permissions
         run: |
-          find ${{ env.PFSC_ROOT }} -type d -exec sudo chmod 775 {} +
-          find ${{ env.PFSC_ROOT }} -type f -exec sudo chmod 664 {} +
+          find ${{ env.PFSC_ROOT }} -type d -exec sudo chmod 777 {} +
+          find ${{ env.PFSC_ROOT }} -type f -exec sudo chmod 666 {} +
       # Check the results
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check file permissions
