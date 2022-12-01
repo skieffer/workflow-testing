@@ -249,4 +249,9 @@ jobs:
         name: Show some written files
         run: |
           ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build/test', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build/test/hist', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build/test/hist/lit', github.workspace) }}
           ls -l ${{ format('{0}/proofscape/build/test/hist/lit/v0.0.0', github.workspace) }}
