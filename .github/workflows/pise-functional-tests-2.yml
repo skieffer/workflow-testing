@@ -1,0 +1,266 @@
+name: pise-functional-tests-2
+# This time, instead of messing with file permissions or ownership, we're going
+# to try using docker volumes for the lib and build dirs. This should give our
+# pfsc-server worker container a place where it can write, without any question
+# of permissions, or matching the `pfsc` user's ID to the ID of any user on the
+# host runner.
+on: workflow_dispatch
+jobs:
+  functional-tests:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
+      TEST_TAG: testing
+      PFSC_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pfsc-server-context.tar.gz', github.workspace) }}
+      TEST_DEPLOY_DIR: testing
+      chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
+      PYODIDE_SERVE_LOCALLY: 0
+      LIB_VOLUME: pfsc-lib
+      # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
+      # various types of output; set to 2 for more debugging output like
+      # uploading certain artifacts for inspection.
+      DEBUG_WORKFLOW: 1
+    steps:
+      # -----------------------------------------
+      # INSTALL
+      # -----------------------------------------
+      # Install Python
+      - name: Install Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+      # -----------------------------------------
+      # Checkout pise
+      - name: Checkout pise
+        uses: actions/checkout@v3
+        with:
+          path: 'pise'
+          # FIXME
+          repository: 'skieffer/pfsc-server'
+          ref: 'recombine'
+      # -----------------------------------------
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check working directory of pise
+        working-directory: pise
+        run: pwd -P
+      # -----------------------------------------
+      # Install manage/venv, preferably from cache
+      - name: Cache manage/venv
+        id: cache-manage-venv
+        uses: actions/cache@v3
+        with:
+          path: pise/manage/venv
+          key: cache-manage-venv-${{ hashFiles('pise/manage/setup.py') }}
+      - if: ${{ steps.cache-manage-venv.outputs.cache-hit != 'true' }}
+        name: Form the manage/venv directory
+        working-directory: pise/manage
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+      - name: Do editable install of pfsc-manage
+        # Need this even if cache hit for venv dir, else will get error:
+        #   importlib.metadata.PackageNotFoundError: pfsc-manage
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pip install -e .
+      # -----------------------------------------
+      # Install server/venv, preferably from cache
+      - name: Cache server/venv
+        id: cache-server-venv
+        uses: actions/cache@v3
+        with:
+          path: pise/server/venv
+          key: cache-server-venv-${{ hashFiles('pise/server/req/*') }}
+      - if: ${{ steps.cache-server-venv.outputs.cache-hit != 'true' }}
+        name: Install server/venv
+        working-directory: pise/server
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          ./req/install.sh
+      # -----------------------------------------
+      # Install client/node_modules, preferably from cache
+      - name: Cache client/node_modules
+        id: cache-client-node_modules
+        uses: actions/cache@v3
+        with:
+          path: pise/client/node_modules
+          key: cache-client-node_modules-${{ hashFiles('pise/client/package-lock.json') }}
+      - if: ${{ steps.cache-client-node_modules.outputs.cache-hit != 'true' }}
+        name: Install client/node_modules
+        working-directory: pise/client
+        run: npm install
+      # -----------------------------------------
+      # Install chromedriver, preferably from cache
+      - name: Cache chromedriver
+        id: cache-chromedriver
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/chromedriver
+          key: cache-chromedriver-${{ env.chromedriver-url }}
+      - if: ${{ steps.cache-chromedriver.outputs.cache-hit != 'true' }}
+        name: Install chromedriver
+        run: |
+          wget ${{ env.chromedriver-url }}
+          unzip chromedriver_linux64.zip
+          mv chromedriver /usr/local/bin/
+      # -----------------------------------------
+      # TODO: install desired release of pfsc-pdf
+      # -----------------------------------------
+      # SET UP
+      # -----------------------------------------
+      # Build directories with pfsc makestruct
+      - name: makestruct
+        working-directory: pise/manage
+        run: |
+          cp sample_conf.py conf.py
+          source venv/bin/activate
+          pfsc makestruct -y
+      # -----------------------------------------
+      # Build client-side JS code
+      - name: Build client-side code
+        working-directory: pise/client
+        run: npm run build:dev
+      # -----------------------------------------
+      # Make test repos
+      - name: Make test repos
+        working-directory: pise/server
+        run: |
+          git config --global user.email "pfsc.test.runner@localhost"
+          git config --global user.name "pfsc test runner"
+          source venv/bin/activate
+          python -m tests.util.make_repos
+      # List test repo owners
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: List test repo owners
+        run: |
+          ls -l ${{ format('{0}/proofscape', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          whoami
+          id
+      # -----------------------------------------
+      # Make a docker context tar file for pfsc-server
+      - name: Make pfsc-server context tar file
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc build server --tar-path=${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
+      # -----------------------------------------
+      # Upload tar file as artifact for inspection
+      - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
+        name: Upload pfsc-server context tar file as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pfsc-server-context.tar.gz
+          path: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+      # -----------------------------------------
+      # Use buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      # Check for presence of tar file
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check for presence of pfsc-server tar file
+        run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
+      # Extract the context
+      - name: Make context dir
+        run: mkdir ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+      - name: Extract context
+        working-directory: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+        run: tar -x -f ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+      # Build
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+          load: true
+          tags: pfsc-server:${{ env.TEST_TAG }}
+          cache-to: type=gha
+          cache-from: type=gha
+      # -----------------------------------------
+      # Form and populate a `lib` volume
+      - name: Form and populate lib volume
+        run: |
+          docker run --rm --entrypoint=bash \
+            -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
+            --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
+            pfsc-server:${{ env.TEST_TAG }} \
+            -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
+      # Check population of lib volume
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check population of lib volume
+        run: |
+          docker run --rm --entrypoint=bash \
+            --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
+            pfsc-server:${{ env.TEST_TAG }} \
+            -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
+      - name: short out
+        run: ls /foo/bar
+      # -----------------------------------------
+      # Generate deployment directory
+      # TODO: modify to use docker volumes instead of bind-mounts for `lib` and `build` dirs
+      - name: Generate a deployment directory
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc deploy generate --gdb re \
+              --pfsc-tag ${{ env.TEST_TAG }} \
+              --oca-tag ${{ env.TEST_TAG }} \
+              -n 1 --demos \
+              --dirname ${{ env.TEST_DEPLOY_DIR }} \
+              --flask-config dockerdev \
+              --mount-code
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Examine deployment code
+        working-directory: ${{ format('{0}/proofscape/deploy/{1}', github.workspace, env.TEST_DEPLOY_DIR) }}
+        run: |
+          echo "============================"
+          echo "MCA yml"
+          cat mca-docker-compose.yml
+          echo "============================"
+          echo "nginx.conf"
+          cat nginx.conf
+          echo "============================"
+          echo "docker.env"
+          cat docker.env
+          echo "============================"
+          echo "server/instance/.env (local.env)"
+          cat ${{ format('{0}/pise/server/instance/.env', github.workspace) }}
+      # -----------------------------------------
+      # Deploy the MCA
+      - name: Deploy MCA
+        working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
+        run: docker compose -f mca-docker-compose.yml up -d
+      # -----------------------------------------
+      # Run Selenium tests
+      - name: Run the Selenium tests
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pytest tests/selenium/test_basic_run_01.py
+      - name: Record docker logs
+        if: always()
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          mkdir -p selenium_results/docker_logs
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-nginx-1 > selenium_results/docker_logs/nginx-1.txt 2>&1
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscweb-1 > selenium_results/docker_logs/pfscweb-1.txt 2>&1
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt 2>&1
+      - name: Upload selenium results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: selenium_results
+          path: ${{ env.PFSC_ROOT }}/selenium_results
+      # Examine the written files
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Show some written files
+        run: |
+          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
+          ls -l ${{ format('{0}/proofscape/build/test/hist/lit/WIP', github.workspace) }}
