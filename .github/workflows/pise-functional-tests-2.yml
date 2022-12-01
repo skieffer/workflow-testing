@@ -269,9 +269,14 @@ jobs:
         with:
           name: selenium_results
           path: ${{ env.PFSC_ROOT }}/selenium_results
+      # -----------------------------------------
       # Examine the written files
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Show some written files
         run: |
-          ls -l ${{ format('{0}/proofscape/lib/test/hist/lit', github.workspace) }}
-          ls -l ${{ format('{0}/proofscape/build/test/hist/lit/WIP', github.workspace) }}
+          docker run --rm --entrypoint=bash \
+            --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
+            --mount 'type=volume,src=${{env.BUILD_VOLUME}},dst=/proofscape/build' \
+            pfsc-server:${{ env.TEST_TAG }} \
+            -c "cd ~/proofscape/lib; ls -l test/hist/lit \
+                cd ~/proofscape/build; ls -l test/hist/lit/WIP"
