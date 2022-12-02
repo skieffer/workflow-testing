@@ -121,25 +121,30 @@ jobs:
           source venv/bin/activate
           pfsc makestruct -y
       # -----------------------------------------
-      # Install pfsc-pdf, preferably from cache
-      - name: Check pfsc-pdf version
+      # Determine version numbers
+      - name: Determine version numbers
+        id: vers-nums
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          echo "PFSC_PDF_VERS=`pfsc check version pfsc-pdf`" >> $GITHUB_ENV
+          echo "PFSC_PDF_VERS=`pfsc check version pfsc-pdf`" >> $GITHUB_OUTPUT
+          echo "PFSC_EXAMP_VERS=`pfsc check version pfsc-examp`" >> $GITHUB_OUTPUT
+          echo "PYODIDE_VERS=`pfsc check version pyodide`" >> $GITHUB_OUTPUT
+      # -----------------------------------------
+      # Install pfsc-pdf, preferably from cache
       - name: Cache pfsc-pdf
         id: cache-pfsc-pdf
         uses: actions/cache@v3
         with:
           path: ${{env.PFSC_ROOT}}/src/pfsc-pdf/build/generic
-          key: cache-pfsc-pdf-${{ env.PFSC_PDF_VERS }}
+          key: cache-pfsc-pdf-${{ steps.vers-nums.outputs.PFSC_PDF_VERS }}
       - if: ${{ steps.cache-pfsc-pdf.outputs.cache-hit != 'true' }}
         name: Install pfsc-pdf
         uses: actions/checkout@v3
         with:
           path: ${{env.PFSC_ROOT}}/src/pfsc-pdf
           repository: proofscape/pfsc-pdf
-          ref: v${{env.PFSC_PDF_VERS}}
+          ref: v${{steps.vers-nums.outputs.PFSC_PDF_VERS}}
       # Check
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check pfsc-pdf installation
@@ -147,6 +152,44 @@ jobs:
         run: |
           ls -l build
           ls -l web
+      # -----------------------------------------
+      # Install Pyodide, preferably from cache
+      - name: Cache Pyodide
+        id: cache-pyodide
+        uses: actions/cache@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/pyodide/v${{steps.vers-nums.outputs.PYODIDE_VERS}}
+          key: cache-pyodide-${{ steps.vers-nums.outputs.PYODIDE_VERS }}
+      - if: ${{ steps.cache-pyodide.outputs.cache-hit != 'true' }}
+        name: Install Pyodide
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc get pyodide
+      # Check
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check Pyodide installation
+        working-directory: ${{env.PFSC_ROOT}}/src/pyodide/v${{steps.vers-nums.outputs.PYODIDE_VERS}}
+        run: ls -l
+      # -----------------------------------------
+      # Install wheels, preferably from cache
+      - name: Cache wheels
+        id: cache-wheels
+        uses: actions/cache@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/whl
+          key: cache-wheels-${{ steps.vers-nums.outputs.PFSC_EXAMP_VERS }}
+      - if: ${{ steps.cache-wheels.outputs.cache-hit != 'true' }}
+        name: Install wheels
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc get wheels
+      # Check
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check wheels installation
+        working-directory: ${{env.PFSC_ROOT}}/src/whl
+        run: ls -l
       # -----------------------------------------
       # TESTING SHORT OUT
       # -----------------------------------------
