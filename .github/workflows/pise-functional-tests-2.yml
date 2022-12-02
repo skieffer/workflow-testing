@@ -17,7 +17,10 @@ jobs:
       PFSC_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pfsc-server-context.tar.gz', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
-      PYODIDE_SERVE_LOCALLY: 0
+      ISE_SERVE_LOCALLY: 1
+      ELKJS_SERVE_LOCALLY: 1
+      MATHJAX_SERVE_LOCALLY: 1
+      PYODIDE_SERVE_LOCALLY: 1
       LIB_VOLUME: pfsc-lib
       BUILD_VOLUME: pfsc-build
       GDB_VOLUME: pfsc-gdb
