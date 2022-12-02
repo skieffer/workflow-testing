@@ -113,10 +113,6 @@ jobs:
           unzip chromedriver_linux64.zip
           mv chromedriver /usr/local/bin/
       # -----------------------------------------
-      # TODO: install desired release of pfsc-pdf
-      # -----------------------------------------
-      # SET UP
-      # -----------------------------------------
       # Build directories with pfsc makestruct
       - name: makestruct
         working-directory: pise/manage
@@ -124,6 +120,41 @@ jobs:
           cp sample_conf.py conf.py
           source venv/bin/activate
           pfsc makestruct -y
+      # -----------------------------------------
+      # Install pfsc-pdf, preferably from cache
+      - name: Check pfsc-pdf version
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          echo "PFSC_PDF_VERS=`pfsc check version pfsc-pdf`" >> $GITHUB_ENV
+      - name: Cache pfsc-pdf
+        id: cache-pfsc-pdf
+        uses: actions/cache@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/pfsc-pdf/build/generic
+          key: cache-pfsc-pdf-${{ env.PFSC_PDF_VERS }}
+      - if: ${{ steps.cache-pfsc-pdf.outputs.cache-hit != 'true' }}
+        name: Install pfsc-pdf
+        uses: actions/checkout@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/pfsc-pdf
+          repository: proofscape/pfsc-pdf
+          ref: v$${{env.PFSC_PDF_VERS}}
+      # Check
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check pfsc-pdf installation
+        working-directory: ${{env.PFSC_ROOT}}/src/pfsc-pdf/build/generic
+        run: |
+          ls -l build
+          ls -l web
+      # -----------------------------------------
+      # TESTING SHORT OUT
+      # -----------------------------------------
+      - name: short out
+        run: ls /foo/bar
+      # -----------------------------------------
+      # -----------------------------------------
+      # SET UP
       # -----------------------------------------
       # Build client-side JS code
       - name: Build client-side code
