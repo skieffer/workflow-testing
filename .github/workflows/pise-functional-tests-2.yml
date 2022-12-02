@@ -139,7 +139,7 @@ jobs:
         with:
           path: ${{env.PFSC_ROOT}}/src/pfsc-pdf
           repository: proofscape/pfsc-pdf
-          ref: v$${{env.PFSC_PDF_VERS}}
+          ref: v${{env.PFSC_PDF_VERS}}
       # Check
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check pfsc-pdf installation
