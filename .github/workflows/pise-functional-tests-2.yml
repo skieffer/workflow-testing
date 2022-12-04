@@ -17,10 +17,16 @@ jobs:
       PISE_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pise-server-context.tar.gz', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
+      # Ensure static assets are served locally.
       ISE_SERVE_LOCALLY: 1
       ELKJS_SERVE_LOCALLY: 1
       MATHJAX_SERVE_LOCALLY: 1
       PYODIDE_SERVE_LOCALLY: 1
+      # For testing, we're going to bind-mount all the code into the containers,
+      # so there's nothing gained by building and using a pise-frontend image.
+      # Instead, we use a simple Nginx image itself for these tests.
+      USE_BASE_NGINX_FRONTEND: 1
+      # We use docker volumes.
       LIB_VOLUME: pfsc-lib
       BUILD_VOLUME: pfsc-build
       GDB_VOLUME: pfsc-gdb
