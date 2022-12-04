@@ -1,0 +1,49 @@
+name: oca-release
+on: workflow_dispatch
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
+      OCA_TAR_PATH: ${{ format('{0}/proofscape/src/oca-context.tar.gz', github.workspace) }}
+      OCA_CONTEXT_DIR: ${{ format('{0}/proofscape/src/oca-context', github.workspace) }}
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      # Get version number
+      - name: get version number
+        id: get-vers
+        run: echo "${{github.ref_name}}" | sed 's#releases/#version=#' >> $GITHUB_OUTPUT
+      # Set image tag
+      - name: Set image tag
+        run: echo "OCA_TAG=${{steps.get-vers.outputs.version}}" >> $GITHUB_ENV
+      # Make the tar file
+      - name: Make tar file
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc build oca --tar-path=${{env.OCA_TAR_PATH}} ${{ env.OCA_TAG }}
+      # Extract the context
+      - name: Make context dir
+        run: mkdir ${{env.OCA_CONTEXT_DIR}}
+      - name: Extract context
+        working-directory: ${{env.OCA_CONTEXT_DIR}}
+        run: tar -x -f ${{ env.OCA_TAR_PATH }}
+      # Build
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{env.OCA_CONTEXT_DIR}}
+          load: true
+          tags: pise:${{ env.OCA_TAG }}
+          cache-to: type=gha
+          cache-from: type=gha
+      # Add license file
+      - name: Add license file
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc build oca-finalize ${{ env.OCA_TAG }} ${{ env.OCA_TAG }}
