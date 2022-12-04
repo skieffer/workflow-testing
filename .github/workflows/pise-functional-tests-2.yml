@@ -1,7 +1,7 @@
 name: pise-functional-tests-2
 # This time, instead of messing with file permissions or ownership, we're going
 # to try using docker volumes for the lib and build dirs. This should give our
-# pfsc-server worker container a place where it can write, without any question
+# pise-server worker container a place where it can write, without any question
 # of permissions, or matching the `pfsc` user's ID to the ID of any user on the
 # host runner.
 on: workflow_dispatch
@@ -14,7 +14,7 @@ jobs:
     env:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
       TEST_TAG: testing
-      PFSC_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pfsc-server-context.tar.gz', github.workspace) }}
+      PISE_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pise-server-context.tar.gz', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       ISE_SERVE_LOCALLY: 1
@@ -260,41 +260,41 @@ jobs:
           whoami
           id
       # -----------------------------------------
-      # Make a docker context tar file for pfsc-server
-      - name: Make pfsc-server context tar file
+      # Make a docker context tar file for pise-server
+      - name: Make pise-server context tar file
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          pfsc build server --tar-path=${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
+          pfsc build server --tar-path=${{ env.PISE_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
       # -----------------------------------------
       # Upload tar file as artifact for inspection
       - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
-        name: Upload pfsc-server context tar file as artifact
+        name: Upload pise-server context tar file as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: pfsc-server-context.tar.gz
-          path: ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+          name: pise-server-context.tar.gz
+          path: ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
       # -----------------------------------------
       # Use buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       # Check for presence of tar file
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
-        name: Check for presence of pfsc-server tar file
+        name: Check for presence of pise-server tar file
         run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
       # Extract the context
       - name: Make context dir
-        run: mkdir ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+        run: mkdir ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
       - name: Extract context
-        working-directory: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
-        run: tar -x -f ${{ env.PFSC_SERVER_CONTEXT_TAR_PATH }}
+        working-directory: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
+        run: tar -x -f ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
       # Build
       - name: Build and export to Docker
         uses: docker/build-push-action@v3
         with:
-          context: ${{ format('{0}/proofscape/src/pfsc-server-context', github.workspace) }}
+          context: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
           load: true
-          tags: pfsc-server:${{ env.TEST_TAG }}
+          tags: pise-server:${{ env.TEST_TAG }}
           cache-to: type=gha
           cache-from: type=gha
       # -----------------------------------------
@@ -304,7 +304,7 @@ jobs:
           docker run --rm --entrypoint=bash \
             -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pfsc-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.TEST_TAG }} \
             -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
       # Check population of lib volume
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
@@ -312,7 +312,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pfsc-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.TEST_TAG }} \
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
       # -----------------------------------------
       # Form `build` and `gdb` volumes
@@ -354,6 +354,6 @@ jobs:
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             --mount 'type=volume,src=${{env.BUILD_VOLUME}},dst=/proofscape/build' \
-            pfsc-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.TEST_TAG }} \
             -c "cd ~/proofscape/lib; ls -l test/hist/lit; \
                 cd ~/proofscape/build; ls -l test/hist/lit/WIP;"
