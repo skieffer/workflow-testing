@@ -162,6 +162,27 @@ jobs:
           ls -l build
           ls -l web
       # -----------------------------------------
+      # Install pfsc-demo-repos, preferably from cache
+      # Note: pfsc-demo-repos doesn't have version numbers yet! So we are
+      # for now just using it at the main branch.
+      - name: Cache pfsc-demo-repos
+        id: cache-pfsc-demo-repos
+        uses: actions/cache@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/pfsc-demo-repos
+          key: cache-pfsc-demo-repos
+      - if: ${{ steps.cache-pfsc-demo-repos.outputs.cache-hit != 'true' }}
+        name: Install pfsc-demo-repos
+        uses: actions/checkout@v3
+        with:
+          path: ${{env.PFSC_ROOT}}/src/pfsc-demo-repos
+          repository: proofscape/pfsc-demo-repos
+      # Check
+      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+        name: Check pfsc-demo-repos installation
+        working-directory: ${{env.PFSC_ROOT}}/src/pfsc-demo-repos
+        run: ls -l workbook
+      # -----------------------------------------
       # Install Pyodide, preferably from cache
       - name: Cache Pyodide
         id: cache-pyodide
