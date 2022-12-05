@@ -2,8 +2,8 @@ name: sim-testing
 on:
   pull_request:
   push:
-    branches-ignore:
-      - 'releases/**'
+    tags-ignore:
+      - 'v*'
   workflow_call:
     inputs:
       save-release-artifacts:

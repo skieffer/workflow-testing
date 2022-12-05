@@ -1,9 +1,7 @@
 name: sim-release
 on:
   push:
-    branches:
-      - 'releases/**'
-    tags-ignore:
+    tags:
       - 'v*'
 jobs:
   run-tests:
@@ -28,13 +26,6 @@ jobs:
           cat repo/a/b/built_file.js
       - name: get version number
         id: get-vers
-        run: echo "${{github.ref_name}}" | sed 's#releases/#version=#' >> $GITHUB_OUTPUT
+        run: echo "${{github.ref_name}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
       - name: Check version number
         run: echo "${{steps.get-vers.outputs.version}}"
-      - name: Short out
-        run: ls /foo
-      - name: tag and push
-        run: |
-          export VTAG=v${{steps.get-vers.outputs.version}}
-          git tag $VTAG
-          git push origin $VTAG
