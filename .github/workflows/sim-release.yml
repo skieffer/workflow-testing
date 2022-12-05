@@ -32,9 +32,10 @@ jobs:
         run: echo "${{github.ref_name}}" | sed 's#releases/#version=#' >> $GITHUB_OUTPUT
       - name: Check version number
         run: echo "${{steps.get-vers.outputs.version}}"
-      - name: Short out
-        run: ls /foo
+      #- name: Short out
+      #  run: ls /foo
       - name: tag and push
+        working-directory: repo
         run: |
           export VTAG=v${{steps.get-vers.outputs.version}}
           git tag $VTAG
