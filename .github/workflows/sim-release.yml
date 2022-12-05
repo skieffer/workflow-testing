@@ -10,6 +10,7 @@ jobs:
       save-release-artifacts: true
   release:
     needs: run-tests
+    environment: publish
     runs-on: ubuntu-22.04
     defaults:
       run:
