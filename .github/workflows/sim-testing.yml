@@ -25,7 +25,7 @@ jobs:
           mkdir -p a/b
           echo "Build at `date`" >> a/b/built_file.js
       - name: Run unit tests
-        run: echo "Passed!"
+        run: grep pass c/foo
       - if: ${{inputs.save_release_artifacts}}
         name: Save release artifacts
         uses: actions/upload-artifact@v3
