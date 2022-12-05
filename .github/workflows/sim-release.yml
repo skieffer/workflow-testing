@@ -26,7 +26,28 @@ jobs:
           ls -l repo/a/b
           cat repo/a/b/built_file.js
       - name: get version number
-        id: get-vers
+        id: get-vers-from-tag
         run: echo "${{github.ref_name}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
+      - name: check version from package.json
+        id: get-vers-from-file
+        working-directory: repo/js
+        run: |
+          echo "version=`grep version package.json | sed -e 's/  "version": "//' | sed -e 's/",//'`" >> $GITHUB_OUTPUT
       - name: Check version number
-        run: echo "${{steps.get-vers.outputs.version}}"
+        run: |
+          echo "Tag version: ${{steps.get-vers-from-tag.outputs.version}}"
+          echo "File version: ${{steps.get-vers-from-file.outputs.version}}"
+          test "${{steps.get-vers-from-tag.outputs.version}}" = "${{steps.get-vers-from-file.outputs.version}}"
+      - name: Check npm publish dry-run
+        working-directory: repo/js
+        run: |
+          npm publish --dry-run 2>&1 | grep LICENSE
+          npm publish --dry-run 2>&1 | grep NOTICE
+      - name: Short out
+        run: ls /foo
+      - name: Do npm publish
+        working-directory: repo/js
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PUBLISH_01}}" > ~/.npmrc
+          echo "//registry.npmjs.org/:always-auth=true" >> ~/.npmrc
+          # npm publish
