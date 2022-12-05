@@ -38,5 +38,7 @@ jobs:
         working-directory: repo
         run: |
           export VTAG=v${{steps.get-vers.outputs.version}}
+          git config --global user.email "workflow.test.runner@localhost"
+          git config --global user.name "workflow test runner"
           git tag $VTAG
           git push origin $VTAG
