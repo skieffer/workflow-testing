@@ -23,9 +23,9 @@ jobs:
           name: sim-artifact
       - name: Check downloaded artifact
         run: |
-          ls -l
-          ls -l a/b
-          cat a/b/built_file.js
+          ls -l repo
+          ls -l repo/a/b
+          cat repo/a/b/built_file.js
       - name: get version number
         id: get-vers
         run: echo "${{github.ref_name}}" | sed 's#releases/#version=#' >> $GITHUB_OUTPUT

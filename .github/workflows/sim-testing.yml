@@ -20,11 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          path: repo
       - name: Build
+        working-directory: repo
         run: |
           mkdir -p a/b
           echo "Build at `date`" >> a/b/built_file.js
       - name: Run unit tests
+        working-directory: repo
         run: grep pass c/foo
       - if: ${{inputs.save-release-artifacts}}
         name: Save release artifacts
@@ -32,5 +36,4 @@ jobs:
         with:
           name: sim-artifact
           path: |
-            a
-            c
+            repo
