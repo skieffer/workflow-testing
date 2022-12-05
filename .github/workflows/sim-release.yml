@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
+    branches-ignore:
+      - '!releases/**'
 jobs:
   run-tests:
     uses: ./.github/workflows/sim-testing.yml
