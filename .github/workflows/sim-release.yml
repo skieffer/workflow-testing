@@ -1,0 +1,40 @@
+name: sim-release
+on:
+  push:
+    branches:
+      - 'releases/**'
+    tags-ignore:
+      - 'v*'
+jobs:
+  run-tests:
+    uses: ./.github/workflows/sim-testing.yml
+    with:
+      save-release-artifacts: true
+  release:
+    needs: run-tests
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Obtain artifacts from testing job
+        uses: actions/download-artifact@v3
+        with:
+          name: sim-artifact
+      - name: Check downloaded artifact
+        run: |
+          ls -l
+          ls -l a/b
+          cat a/b/built_file.js
+      - name: get version number
+        id: get-vers
+        run: echo "${{github.ref_name}}" | sed 's#releases/#version=#' >> $GITHUB_OUTPUT
+      - name: Check version number
+        run: echo "${{steps.get-vers.outputs.version}}"
+      - name: Short out
+        run: ls /foo
+      - name: tag and push
+        run: |
+          export VTAG=v${{steps.get-vers.outputs.version}}
+          git tag $VTAG
+          git push origin $VTAG
