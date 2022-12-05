@@ -6,7 +6,7 @@ on:
       - 'releases/**'
   workflow_call:
     inputs:
-      save_release_artifacts:
+      save-release-artifacts:
         description: 'Whether to upload artifacts for release processing'
         type: boolean
         default: false
@@ -26,7 +26,7 @@ jobs:
           echo "Build at `date`" >> a/b/built_file.js
       - name: Run unit tests
         run: grep pass c/foo
-      - if: ${{inputs.save_release_artifacts}}
+      - if: ${{inputs.save-release-artifacts}}
         name: Save release artifacts
         uses: actions/upload-artifact@v3
         with:
