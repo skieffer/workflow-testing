@@ -1,0 +1,35 @@
+name: sim-testing
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - 'releases/**'
+  workflow_call:
+    inputs:
+      save_release_artifacts:
+        description: 'Whether to upload artifacts for release processing'
+        type: boolean
+        default: false
+        required: false
+jobs:
+  unit-tests:
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
+          mkdir -p a/b
+          echo "Build at `date`" >> a/b/built_file.js
+      - name: Run unit tests
+        run: echo "Passed!"
+      - if: ${{inputs.save_release_artifacts}}
+        name: Save release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sim-artifact
+          path: |
+            a
+            c
