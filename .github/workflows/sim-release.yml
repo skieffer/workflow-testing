@@ -2,7 +2,7 @@ name: sim-release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 jobs:
   run-tests:
     uses: ./.github/workflows/sim-testing.yml
