@@ -43,11 +43,9 @@ jobs:
         run: |
           npm publish --dry-run 2>&1 | grep LICENSE
           npm publish --dry-run 2>&1 | grep NOTICE
-      - name: Short out
-        run: ls /foo
       - name: Do npm publish
         working-directory: repo/js
         run: |
           echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PUBLISH_01}}" > ~/.npmrc
           echo "//registry.npmjs.org/:always-auth=true" >> ~/.npmrc
-          # npm publish
+          npm publish
