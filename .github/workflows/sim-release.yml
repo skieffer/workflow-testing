@@ -24,6 +24,7 @@ jobs:
       - name: Check downloaded artifact
         run: |
           ls -l repo
+          ls -l other
           ls -l repo/a/b
           cat repo/a/b/built_file.js
       - name: get version number
