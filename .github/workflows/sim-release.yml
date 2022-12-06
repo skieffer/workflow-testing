@@ -16,33 +16,46 @@ jobs:
       run:
         shell: bash
     steps:
+      # Download artifacts from testing job
       - name: Obtain artifacts from testing job
         uses: actions/download-artifact@v3
         with:
           name: sim-artifact
+      # Check download
       - name: Check downloaded artifact
         run: |
           ls -l repo
           ls -l repo/a/b
           cat repo/a/b/built_file.js
-      - name: get version number
+          ls -l other
+          ls -l images
+      # -------------------------------------
+      # Version number
+      # Number from tag
+      - name: get version number from tag
         id: get-vers-from-tag
         run: echo "${{github.ref_name}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
+      # Number from file
       - name: check version from package.json
         id: get-vers-from-file
         working-directory: repo/js
         run: |
           echo "version=`grep version package.json | sed -e 's/  "version": "//' | sed -e 's/",//'`" >> $GITHUB_OUTPUT
+      # Verify the two numbers are the same
       - name: Check version number
         run: |
           echo "Tag version: ${{steps.get-vers-from-tag.outputs.version}}"
           echo "File version: ${{steps.get-vers-from-file.outputs.version}}"
           test "${{steps.get-vers-from-tag.outputs.version}}" = "${{steps.get-vers-from-file.outputs.version}}"
+      # -------------------------------------
+      # npm
+      # Check that certain files will be included
       - name: Check npm publish dry-run
         working-directory: repo/js
         run: |
           npm publish --dry-run 2>&1 | grep LICENSE
           npm publish --dry-run 2>&1 | grep NOTICE
+      # npm publish
       - name: Do npm publish
         working-directory: repo/js
         run: |
