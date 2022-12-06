@@ -20,22 +20,50 @@ jobs:
       run:
         shell: bash
     steps:
+      # Repo checkout
       - name: Checkout
         uses: actions/checkout@v3
         with:
           path: repo
+      # Building sth
       - name: Build
         working-directory: repo
         run: |
           mkdir -p a/b
           echo "Build at `date`" >> a/b/built_file.js
+      # Making some other stuff
       - name: Make other stuff
         run: |
           mkdir other
           echo "foo" > other/stuff
+      # Unit tests
       - name: Run unit tests
         working-directory: repo
         run: grep pass c/foo
+      # ---------------------------------------------
+      # Docker
+      # Install buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      # Build image as tar file
+      # See https://docs.docker.com/build/ci/github-actions/examples/#share-built-image-between-jobs
+      - name: Make dir for image
+        run: mkdir images
+      - name: Build image as tar file
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: repo/c/Dockerfile
+          tags: wflow01:testing
+          outputs: type=docker,dest=images/wflow01.tar
+      # Load image
+      - name: Load image
+        run: docker load --input images/wflow01.tar
+      # Run, for proof of concept
+      - name: Check image contents
+        run: docker run --rm wflow01:testing sh -c "ls -l /usr/local/share"
+      # ---------------------------------------------
+      # Conditional upload of artifacts
       - if: ${{inputs.save-release-artifacts}}
         name: Save release artifacts
         uses: actions/upload-artifact@v3
@@ -44,3 +72,4 @@ jobs:
           path: |
             repo
             other
+            images
