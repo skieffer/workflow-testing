@@ -48,6 +48,12 @@ jobs:
           echo "File version: ${{steps.get-vers-from-file.outputs.version}}"
           test "${{steps.get-vers-from-tag.outputs.version}}" = "${{steps.get-vers-from-file.outputs.version}}"
       # -------------------------------------
+      # Publishing
+      # Manually control whether we're doing the publishing steps or not
+      - name: Switch publishing on or off
+        id: switch
+        run: echo "pub-npm=no" >> $GITHUB_OUTPUT
+      # -------------------------------------
       # npm
       # Check that certain files will be included
       - name: Check npm publish dry-run
@@ -56,7 +62,8 @@ jobs:
           npm publish --dry-run 2>&1 | grep LICENSE
           npm publish --dry-run 2>&1 | grep NOTICE
       # npm publish
-      - name: Do npm publish
+      - if: ${{ steps.switch.outputs.pub-npm == 'yes' }}
+        name: Do npm publish
         working-directory: repo/js
         run: |
           echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PUBLISH_01}}" > ~/.npmrc
