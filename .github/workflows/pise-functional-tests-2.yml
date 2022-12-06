@@ -104,9 +104,9 @@ jobs:
           path: pise/client/node_modules
           key: cache-client-node_modules-${{ hashFiles('pise/client/package-lock.json') }}
       - if: ${{ steps.cache-client-node_modules.outputs.cache-hit != 'true' }}
-        name: Install client/node_modules
+        name: Clean-install client/node_modules
         working-directory: pise/client
-        run: npm install
+        run: npm ci
       # -----------------------------------------
       # Install chromedriver, preferably from cache
       - name: Cache chromedriver
