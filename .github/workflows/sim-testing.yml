@@ -56,6 +56,8 @@ jobs:
           file: repo/c/Dockerfile
           tags: wflow01:testing
           outputs: type=docker,dest=images/wflow01.tar
+          cache-to: type=gha
+          cache-from: type=gha
       # Load image
       - name: Load image
         run: docker load --input images/wflow01.tar
