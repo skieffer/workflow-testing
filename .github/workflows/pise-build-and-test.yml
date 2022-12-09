@@ -21,6 +21,8 @@ jobs:
     env:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
       PISE_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pise-server-context.tar.gz', github.workspace) }}
+      PISE_FRONTEND_CTX_TAR: ${{ format('{0}/contexts/pise-frontend-context.tar.gz', github.workspace) }}
+      PISE_FRONTEND_CTX_DIR: ${{ format('{0}/contexts/pise-frontend-context', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       # Ensure static assets are served locally.
@@ -404,7 +406,7 @@ jobs:
         run: tar -x -f ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
       # If building, build
       - if: ${{ env.BUILDING }}
-        name: Build and export to Docker
+        name: Build and export pise-server image to Docker
         uses: docker/build-push-action@v3
         with:
           context: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
@@ -439,6 +441,25 @@ jobs:
         run: |
           docker volume create ${{env.BUILD_VOLUME}}
           docker volume create ${{env.GDB_VOLUME}}
+      # -----------------------------------------
+      # If pub-prep, we need to build a pise-frontend image
+      - if: ${{ inputs.pub-prep }}
+        name: Make pise-frontend build context
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc build frontend --tar-path=${{env.PISE_FRONTEND_CTX_TAR}} ${{env.PISE_VERS}}
+          mkdir ${{env.PISE_FRONTEND_CTX_DIR}}
+          tar -x -f ${{env.PISE_FRONTEND_CTX_TAR}} -C ${{env.PISE_FRONTEND_CTX_DIR}}
+      - if: ${{ inputs.pub-prep }}
+        name: Build and export pise-frontend image to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{env.PISE_FRONTEND_CTX_DIR}}
+          load: true
+          tags: pise-frontend:${{env.PISE_VERS}}
+          cache-to: type=gha
+          cache-from: type=gha
       # -----------------------------------------
       # Deploy the MCA
       - name: Deploy MCA
@@ -476,3 +497,11 @@ jobs:
             pise-server:${{ env.PISE_VERS }} \
             -c "cd ~/proofscape/lib; ls -l test/hist/lit; \
                 cd ~/proofscape/build; ls -l test/hist/lit/WIP;"
+      # -----------------------------------------
+      # TODO: If pub-prep
+      #   - stop the MCA deployment
+      #   - build the pise:${{env.PISE_VERS}} OCA image
+      #   - run OCA
+      #   - run OCA selenium tests
+      #   - stop OCA
+      #   - upload four artifacts: client/dist/ise, plus three docker tar files
