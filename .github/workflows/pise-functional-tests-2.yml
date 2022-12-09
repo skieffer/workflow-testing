@@ -357,7 +357,7 @@ jobs:
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          pytest tests/selenium/test_basic_run_01.py
+          pytest tests/selenium/test_basic_run_mca.py
       - name: Record docker logs
         if: always()
         working-directory: ${{ env.PFSC_ROOT }}
