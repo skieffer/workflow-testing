@@ -273,7 +273,7 @@ jobs:
         run: |
           source venv/bin/activate
           pfsc deploy generate --gdb re \
-              ${{ !inputs.pub-prep && "--no-redis --mount-code" || "" }} \
+              ${{ !inputs.pub-prep && '--no-redis --mount-code' || '' }} \
               --pfsc-tag ${{ env.TEST_TAG }} \
               --oca-tag ${{ env.TEST_TAG }} \
               -n 1 --demos \
