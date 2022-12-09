@@ -149,6 +149,7 @@ jobs:
           echo "PFSC_EXAMP_VERS=`pfsc check version pfsc-examp`" >> $GITHUB_OUTPUT
           echo "PYODIDE_VERS=`pfsc check version pyodide`" >> $GITHUB_OUTPUT
           echo "REDISGRAPH_VERS=`pfsc check version redisgraph-tag`" >> $GITHUB_OUTPUT
+          echo "NGINX_VERS=`pfsc check version nginx-tag`" >> $GITHUB_OUTPUT
       # -----------------------------------------
       # Make image directory
       - name: Make image dir
@@ -169,6 +170,22 @@ jobs:
         run: |
           docker pull redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
           docker save --output=images/redisgraph.tar redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
+      # -----------------------------------------
+      # Obtain Nginx image, preferably from cache
+      - name: Cache nginx
+        id: cache-nginx
+        uses: actions/cache@v3
+        with:
+          path: images/nginx.tar
+          key: cache-nginx-${{ steps.vers-nums.outputs.NGINX_VERS }}
+      - if: ${{ steps.cache-nginx.outputs.cache-hit == 'true' }}
+        name: Load nginx
+        run: docker load --input=images/nginx.tar
+      - if: ${{ steps.cache-nginx.outputs.cache-hit != 'true' }}
+        name: Pull nginx
+        run: |
+          docker pull nginx:${{ steps.vers-nums.outputs.NGINX_VERS }}
+          docker save --output=images/nginx.tar nginx:${{ steps.vers-nums.outputs.NGINX_VERS }}
       # -----------------------------------------
       # Install pfsc-pdf, preferably from cache
       - name: Cache pfsc-pdf
