@@ -400,7 +400,7 @@ jobs:
       # If building and debugging, check for presence of context file
       - if: ${{ env.BUILDING && env.DEBUG_WORKFLOW >= 1 }}
         name: Check for presence of pise-server tar file
-        run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
+        run: ls -l ${{ format('{0}/contexts', github.workspace) }}
       # If building, extract the context
       - if: ${{ env.BUILDING }}
         name: Make pise-server context dir
