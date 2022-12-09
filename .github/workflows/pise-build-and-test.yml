@@ -167,8 +167,8 @@ jobs:
       - if: ${{ steps.cache-redisgraph.outputs.cache-hit != 'true' }}
         name: Pull redisgraph
         run: |
-          docker pull redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
-          docker save --output=images/redisgraph.tar redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
+          docker pull redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
+          docker save --output=images/redisgraph.tar redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
       # -----------------------------------------
       # Install pfsc-pdf, preferably from cache
       - name: Cache pfsc-pdf
