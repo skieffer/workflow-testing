@@ -151,12 +151,18 @@ jobs:
           unzip chromedriver_linux64.zip
           mv chromedriver /usr/local/bin/
       # -----------------------------------------
-      # Build directories with pfsc makestruct
+      # Make directories with pfsc makestruct
       - name: makestruct
         working-directory: pise/manage
         run: |
           source venv/bin/activate
           pfsc makestruct -y
+      # -----------------------------------------
+      # Make other directories
+      - name: Make other directories
+        run: |
+          mkdir images
+          mkdir contexts
       # -----------------------------------------
       # Determine version numbers
       - name: Determine version numbers
@@ -169,10 +175,6 @@ jobs:
           echo "PYODIDE_VERS=`pfsc check version pyodide`" >> $GITHUB_OUTPUT
           echo "REDISGRAPH_VERS=`pfsc check version redisgraph-tag`" >> $GITHUB_OUTPUT
           echo "NGINX_VERS=`pfsc check version nginx-tag`" >> $GITHUB_OUTPUT
-      # -----------------------------------------
-      # Make image directory
-      - name: Make image dir
-        run: mkdir images
       # -----------------------------------------
       # Obtain RedisGraph image, preferably from cache
       - name: Cache redisgraph
