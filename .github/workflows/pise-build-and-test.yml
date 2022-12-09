@@ -20,7 +20,6 @@ jobs:
         shell: bash
     env:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
-      TEST_TAG: testing
       PISE_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pise-server-context.tar.gz', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
@@ -309,8 +308,8 @@ jobs:
           source venv/bin/activate
           pfsc deploy generate --gdb re \
               ${{ !inputs.pub-prep && '--no-redis --mount-code' || '' }} \
-              --pfsc-tag ${{ env.TEST_TAG }} \
-              --oca-tag ${{ env.TEST_TAG }} \
+              --pfsc-tag ${{ env.PISE_VERS }} \
+              --oca-tag ${{ env.PISE_VERS }} \
               -n 1 --demos \
               --dirname ${{ env.TEST_DEPLOY_DIR }} \
               --flask-config dockerdev \
@@ -352,42 +351,67 @@ jobs:
           whoami
           id
       # -----------------------------------------
-      # Docker Build
-      # Make context file for pise-server
-      - name: Make pise-server context tar file
+      # pise-server image
+      # If basic testing, try to obtain image from cache
+      - if: ${{!inputs.pub-prep}}
+        name: Cache pise-server
+        id: cache-pise-server
+        uses: actions/cache@v3
+        with:
+          path: images/pise-server.tar
+          key: cache-pise-server-${{env.PISE_VERS}}
+      # If basic testing and had a cache hit, load from tar file into Docker.
+      - if: ${{!inputs.pub-prep && steps.cache-pise-server.outputs.cache-hit == 'true' }}
+        name: Load pise-server
+        run: docker load --input=images/pise-server.tar
+      # If either pub-prep, or a cache miss, then we need to build. Set an env var to note this.
+      - if: ${{inputs.pub-prep || steps.cache-pise-server.outputs.cache-hit != 'true' }}
+        name: Set building var
+        run: echo "BUILDING=1" >> $GITHUB_ENV
+      # If building, make context file for pise-server.
+      - if: ${{ env.BUILDING }}
+        name: Make pise-server context tar file
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          pfsc build server --tar-path=${{ env.PISE_SERVER_CONTEXT_TAR_PATH }} ${{ env.TEST_TAG }}
-      # Upload context file as artifact for inspection
-      - if: ${{ env.DEBUG_WORKFLOW >= 2 }}
+          pfsc build server --tar-path=${{ env.PISE_SERVER_CONTEXT_TAR_PATH }} ${{ env.PISE_VERS }}
+      # If building and debugging, upload context file as artifact for inspection
+      - if: ${{ env.BUILDING && env.DEBUG_WORKFLOW >= 2 }}
         name: Upload pise-server context tar file as artifact
         uses: actions/upload-artifact@v3
         with:
           name: pise-server-context.tar.gz
           path: ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
-      # Use buildx
-      - name: Set up Docker Buildx
+      # If building, will need buildx
+      - if: ${{ env.BUILDING }}
+        name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      # Check for presence of context file
-      - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
+      # If building and debugging, check for presence of context file
+      - if: ${{ env.BUILDING && env.DEBUG_WORKFLOW >= 1 }}
         name: Check for presence of pise-server tar file
         run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
-      # Extract the context
-      - name: Make context dir
+      # If building, extract the context
+      - if: ${{ env.BUILDING }}
+        name: Make context dir
         run: mkdir ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
-      - name: Extract context
+      - if: ${{ env.BUILDING }}
+        name: Extract context
         working-directory: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
         run: tar -x -f ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
-      # Build
-      - name: Build and export to Docker
+      # If building, build
+      - if: ${{ env.BUILDING }}
+        name: Build and export to Docker
         uses: docker/build-push-action@v3
         with:
           context: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
           load: true
-          tags: pise-server:${{ env.TEST_TAG }}
+          tags: pise-server:${{env.PISE_VERS}}
           cache-to: type=gha
           cache-from: type=gha
+      # If it's basic testing, and we had a cache miss, then it's time to save the image we built.
+      - if: ${{!inputs.pub-prep && steps.cache-pise-server.outputs.cache-hit != 'true' }}
+        name: Save pise-server image
+        run: docker save --output=images/pise-server.tar pise-server:${{env.PISE_VERS}}
       # -----------------------------------------
       # Form and populate a `lib` volume
       - name: Form and populate lib volume
@@ -395,7 +419,7 @@ jobs:
           docker run --rm --entrypoint=bash \
             -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pise-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.PISE_VERS }} \
             -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
       # Check population of lib volume
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
@@ -403,7 +427,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pise-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.PISE_VERS }} \
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
       # -----------------------------------------
       # Form `build` and `gdb` volumes
@@ -445,6 +469,6 @@ jobs:
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             --mount 'type=volume,src=${{env.BUILD_VOLUME}},dst=/proofscape/build' \
-            pise-server:${{ env.TEST_TAG }} \
+            pise-server:${{ env.PISE_VERS }} \
             -c "cd ~/proofscape/lib; ls -l test/hist/lit; \
                 cd ~/proofscape/build; ls -l test/hist/lit/WIP;"
