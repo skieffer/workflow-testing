@@ -8,7 +8,7 @@ on:
         default: false
         required: true
       v-tag:
-        description: 'Version tag vM.m.p for builds'
+        description: 'Version tag vM.m.p for pub-prep builds'
         type: string
         default: 'v0.0.0'
         required: false
