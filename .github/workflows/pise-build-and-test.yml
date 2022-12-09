@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       pub-prep:
-        description: 'Extra build/test/artifact-upload in prep for publication'
+        description: 'Extra steps in preparation for publication'
         type: boolean
         default: false
         required: true
