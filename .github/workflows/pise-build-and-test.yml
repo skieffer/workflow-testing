@@ -303,6 +303,10 @@ jobs:
       - name: Build client-side code
         working-directory: pise/client
         run: npm run build:dev
+      - if: ${{ inputs.pub-prep }}
+        name: Build minified client-side code
+        working-directory: pise/client
+        run: npm run build
       # -----------------------------------------
       # Generate deployment directory
       # Note: We have to do this before running the `make_tests` script, since
