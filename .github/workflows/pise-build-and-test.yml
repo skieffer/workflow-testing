@@ -24,6 +24,8 @@ jobs:
       PISE_SERVER_CTX_DIR: ${{ format('{0}/contexts/pise-server-context', github.workspace) }}
       PISE_FRONTEND_CTX_TAR: ${{ format('{0}/contexts/pise-frontend-context.tar.gz', github.workspace) }}
       PISE_FRONTEND_CTX_DIR: ${{ format('{0}/contexts/pise-frontend-context', github.workspace) }}
+      PISE_OCA_CTX_TAR: ${{ format('{0}/contexts/pise-oca-context.tar.gz', github.workspace) }}
+      PISE_OCA_CTX_DIR: ${{ format('{0}/contexts/pise-oca-context', github.workspace) }}
       TEST_DEPLOY_DIR: testing
       chromedriver-url: https://chromedriver.storage.googleapis.com/107.0.5304.62/chromedriver_linux64.zip
       # Ensure static assets are served locally.
@@ -335,6 +337,9 @@ jobs:
           echo "MCA yml"
           cat mca-docker-compose.yml
           echo "============================"
+          echo "OCA yml"
+          cat oca-docker-compose.yml
+          echo "============================"
           echo "nginx.conf"
           cat nginx.conf
           echo "============================"
@@ -423,7 +428,7 @@ jobs:
         run: docker save --output=images/pise-server.tar pise-server:${{env.PISE_VERS}}
       # -----------------------------------------
       # Form and populate a `lib` volume
-      - name: Form and populate lib volume
+      - name: Form and populate lib volume for MCA
         run: |
           docker run --rm --entrypoint=bash \
             -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
@@ -432,7 +437,7 @@ jobs:
             -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
       # Check population of lib volume
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
-        name: Check population of lib volume
+        name: Check population of lib volume for MCA
         run: |
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
@@ -440,7 +445,7 @@ jobs:
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
       # -----------------------------------------
       # Form `build` and `gdb` volumes
-      - name: Form build and gdb volumes
+      - name: Form build and gdb volumes for MCA
         run: |
           docker volume create ${{env.BUILD_VOLUME}}
           docker volume create ${{env.GDB_VOLUME}}
@@ -469,8 +474,8 @@ jobs:
         working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
         run: docker compose -f mca-docker-compose.yml up -d
       # -----------------------------------------
-      # Run Selenium tests
-      - name: Run the Selenium tests
+      # Run MCA Selenium tests
+      - name: Run MCA Selenium tests
         working-directory: pise/manage
         run: |
           source venv/bin/activate
@@ -501,10 +506,120 @@ jobs:
             -c "cd ~/proofscape/lib; ls -l test/hist/lit; \
                 cd ~/proofscape/build; ls -l test/hist/lit/WIP;"
       # -----------------------------------------
-      # TODO: If pub-prep
-      #   - stop the MCA deployment
-      #   - build the pise:${{env.PISE_VERS}} OCA image
-      #   - run OCA
-      #   - run OCA selenium tests
-      #   - stop OCA
-      #   - upload four artifacts: client/dist/ise, plus three docker tar files
+      # Stop the MCA
+      - name: Stop MCA
+        working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
+        run: docker compose -f mca-docker-compose.yml down
+      # -----------------------------------------
+      # OCA
+      # -----------------------------------------
+      # If pub-prep, build pise (OCA) image
+      - if: ${{ inputs.pub-prep }}
+        name: Make pise OCA build context
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pfsc build oca --tar-path=${{env.PISE_OCA_CTX_TAR}} ${{env.PISE_VERS}}
+          mkdir ${{env.PISE_OCA_CTX_DIR}}
+          tar -x -f ${{env.PISE_OCA_CTX_TAR}} -C ${{env.PISE_OCA_CTX_DIR}}
+      - if: ${{ inputs.pub-prep }}
+        name: Build and export pise OCA image to Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{env.PISE_OCA_CTX_DIR}}
+          load: true
+          tags: pise:${{env.PISE_VERS}}
+          cache-to: type=gha
+          cache-from: type=gha
+      # -----------------------------------------
+      # Remake the lib, build, gdb volumes
+      - if: ${{ inputs.pub-prep }}
+        name: Remove existing lib, build, gdb volumes
+        run: docker volume rm ${{env.LIB_VOLUME}} ${{env.BUILD_VOLUME}} ${{env.GDB_VOLUME}}
+      # Form and populate a `lib` volume
+      - if: ${{ inputs.pub-prep }}
+        name: Form and populate lib volume for OCA
+        run: |
+          docker run --rm --entrypoint=bash \
+            -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
+            --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
+            pise-server:${{ env.PISE_VERS }} \
+            -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
+      # Check population of lib volume
+      - if: ${{ inputs.pub-prep && env.DEBUG_WORKFLOW >= 1 }}
+        name: Check population of lib volume for OCA
+        run: |
+          docker run --rm --entrypoint=bash \
+            --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
+            pise-server:${{ env.PISE_VERS }} \
+            -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
+      # Form `build` and `gdb` volumes
+      - if: ${{ inputs.pub-prep }}
+        name: Form build and gdb volumes for OCA
+        run: |
+          docker volume create ${{env.BUILD_VOLUME}}
+          docker volume create ${{env.GDB_VOLUME}}
+      # -----------------------------------------
+      # Run the OCA
+      - if: ${{ inputs.pub-prep }}
+        name: Run the OCA
+        working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
+        run: docker compose -f oca-docker-compose.yml up -d
+      # -----------------------------------------
+      # Run OCA Selenium tests
+      - if: ${{ inputs.pub-prep }}
+        name: Run OCA Selenium tests
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          pytest tests/selenium/test_basic_run_oca.py
+      - if: ${{ inputs.pub-prep && always() }}
+        name: Record docker logs
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          mkdir -p selenium_results/docker_logs
+          docker logs ${{ env.TEST_DEPLOY_DIR }}-pise-1 > selenium_results/docker_logs/pise-1.txt 2>&1
+      - if: ${{ inputs.pub-prep && always() }}
+        name: Upload selenium results
+        uses: actions/upload-artifact@v3
+        with:
+          name: selenium_results
+          path: ${{ env.PFSC_ROOT }}/selenium_results
+      # -----------------------------------------
+      # Stop the OCA
+      - if: ${{ inputs.pub-prep }}
+        name: Stop the OCA
+        working-directory: ${{ format('{0}/deploy/{1}', env.PFSC_ROOT, env.TEST_DEPLOY_DIR) }}
+        run: docker compose -f oca-docker-compose.yml down
+      # -----------------------------------------
+      # Upload artifacts for publication job
+      - if: ${{ inputs.pub-prep }}
+        name: Save docker images for upload
+        run: |
+          docker save --output=images/pise-server.tar pise-server:${{env.PISE_VERS}}
+          docker save --output=images/pise-frontend.tar pise-frontend:${{env.PISE_VERS}}
+          docker save --output=images/pise.tar pise:${{env.PISE_VERS}}
+      - if: ${{ inputs.pub-prep }}
+        name: Upload client/dist/ise
+        uses: actions/upload-artifact@v3
+        with:
+          name: client-dist-ise-${{env.PISE_VERS}}
+          path: pise/client/dist/ise
+      - if: ${{ inputs.pub-prep }}
+        name: Upload pise-server.tar
+        uses: actions/upload-artifact@v3
+        with:
+          name: pise-server-${{env.PISE_VERS}}
+          path: images/pise-server.tar
+      - if: ${{ inputs.pub-prep }}
+        name: Upload pise-frontend.tar
+        uses: actions/upload-artifact@v3
+        with:
+          name: pise-frontend-${{env.PISE_VERS}}
+          path: images/pise-frontend.tar
+      - if: ${{ inputs.pub-prep }}
+        name: Upload pise.tar
+        uses: actions/upload-artifact@v3
+        with:
+          name: pise-${{env.PISE_VERS}}
+          path: images/pise.tar
