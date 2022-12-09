@@ -3,10 +3,15 @@ on:
   workflow_dispatch:
     inputs:
       pub-prep:
-        description: 'Extra steps in preparation for publication'
+        description: 'Do extra steps in preparation for publication'
         type: boolean
         default: false
         required: true
+      v-tag:
+        description: 'Version tag vM.m.p for builds'
+        type: string
+        default: 'v0.0.0'
+        required: false
 jobs:
   build-and-test:
     runs-on: ubuntu-22.04
@@ -40,10 +45,12 @@ jobs:
         name: Configure for basic run
         run: |
           echo "USE_BASE_NGINX_FRONTEND=1" >> $GITHUB_ENV
+          echo "PISE_VERS=testing" >> $GITHUB_ENV
       - if: ${{ inputs.pub-prep }}
         name: Configure for pub-prep
         run: |
           echo "USE_BASE_NGINX_FRONTEND=0" >> $GITHUB_ENV
+          echo "${{inputs.v-tag}}" | sed 's/v/PISE_VERS=/' >> $GITHUB_ENV
       # -----------------------------------------
       # INSTALL
       # -----------------------------------------
@@ -61,7 +68,6 @@ jobs:
           # FIXME
           repository: 'skieffer/pfsc-server'
           ref: 'recombine'
-      # -----------------------------------------
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
         name: Check working directory of pise
         working-directory: pise
@@ -88,6 +94,18 @@ jobs:
         run: |
           source venv/bin/activate
           pip install -e .
+      # -----------------------------------------
+      # Check version number
+      - name: Get version number from pise/client/package.json
+        id: get-vers-from-file
+        working-directory: pise/manage
+        run: |
+          source venv/bin/activate
+          echo "version=`pfsc check version pise`" >> $GITHUB_OUTPUT
+      - if: ${{ inputs.pub-prep }}
+        name: Check version number
+        run: |
+          test "${{env.PISE_VERS}}" = "${{steps.get-vers-from-file.outputs.version}}"
       # -----------------------------------------
       # Install server/venv, preferably from cache
       - name: Cache server/venv
