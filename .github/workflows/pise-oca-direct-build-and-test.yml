@@ -20,10 +20,6 @@ jobs:
         shell: bash
     env:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
-      PISE_SERVER_CTX_TAR: ${{ format('{0}/contexts/pise-server-context.tar.gz', github.workspace) }}
-      PISE_SERVER_CTX_DIR: ${{ format('{0}/contexts/pise-server-context', github.workspace) }}
-      PISE_FRONTEND_CTX_TAR: ${{ format('{0}/contexts/pise-frontend-context.tar.gz', github.workspace) }}
-      PISE_FRONTEND_CTX_DIR: ${{ format('{0}/contexts/pise-frontend-context', github.workspace) }}
       PISE_OCA_CTX_TAR: ${{ format('{0}/contexts/pise-oca-context.tar.gz', github.workspace) }}
       PISE_OCA_CTX_DIR: ${{ format('{0}/contexts/pise-oca-context', github.workspace) }}
       TEST_DEPLOY_DIR: testing
@@ -380,7 +376,7 @@ jobs:
           docker run --rm --entrypoint=bash \
             -v ${{env.PFSC_ROOT}}/lib:/usr/local/share/proofscape_lib:ro \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pise-server:${{ env.PISE_VERS }} \
+            pise:${{ env.PISE_VERS }} \
             -c "cp -r /usr/local/share/proofscape_lib/* ~/proofscape/lib"
       # Check population of lib volume
       - if: ${{ inputs.pub-prep && env.DEBUG_WORKFLOW >= 1 }}
@@ -388,7 +384,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash \
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
-            pise-server:${{ env.PISE_VERS }} \
+            pise:${{ env.PISE_VERS }} \
             -c "cd ~/proofscape/lib; ls -l; ls -l test/hist/lit"
       # Form `build` and `gdb` volumes
       - if: ${{ inputs.pub-prep }}
