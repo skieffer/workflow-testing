@@ -20,7 +20,8 @@ jobs:
         shell: bash
     env:
       PFSC_ROOT: ${{ format('{0}/proofscape', github.workspace) }}
-      PISE_SERVER_CONTEXT_TAR_PATH: ${{ format('{0}/proofscape/src/pise-server-context.tar.gz', github.workspace) }}
+      PISE_SERVER_CTX_TAR: ${{ format('{0}/contexts/pise-server-context.tar.gz', github.workspace) }}
+      PISE_SERVER_CTX_DIR: ${{ format('{0}/contexts/pise-server-context', github.workspace) }}
       PISE_FRONTEND_CTX_TAR: ${{ format('{0}/contexts/pise-frontend-context.tar.gz', github.workspace) }}
       PISE_FRONTEND_CTX_DIR: ${{ format('{0}/contexts/pise-frontend-context', github.workspace) }}
       TEST_DEPLOY_DIR: testing
@@ -384,14 +385,14 @@ jobs:
         working-directory: pise/manage
         run: |
           source venv/bin/activate
-          pfsc build server --tar-path=${{ env.PISE_SERVER_CONTEXT_TAR_PATH }} ${{ env.PISE_VERS }}
+          pfsc build server --tar-path=${{ env.PISE_SERVER_CTX_TAR }} ${{ env.PISE_VERS }}
       # If building and debugging, upload context file as artifact for inspection
       - if: ${{ env.BUILDING && env.DEBUG_WORKFLOW >= 2 }}
         name: Upload pise-server context tar file as artifact
         uses: actions/upload-artifact@v3
         with:
           name: pise-server-context.tar.gz
-          path: ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
+          path: ${{ env.PISE_SERVER_CTX_TAR }}
       # If building, will need buildx
       - if: ${{ env.BUILDING }}
         name: Set up Docker Buildx
@@ -402,18 +403,16 @@ jobs:
         run: ls -l ${{ format('{0}/proofscape/src', github.workspace) }}
       # If building, extract the context
       - if: ${{ env.BUILDING }}
-        name: Make context dir
-        run: mkdir ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
-      - if: ${{ env.BUILDING }}
-        name: Extract context
-        working-directory: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
-        run: tar -x -f ${{ env.PISE_SERVER_CONTEXT_TAR_PATH }}
+        name: Make pise-server context dir
+        run: |
+          mkdir ${{ env.PISE_SERVER_CTX_DIR }}
+          tar -x -f ${{ env.PISE_SERVER_CTX_TAR }} -C ${{ env.PISE_SERVER_CTX_DIR }}
       # If building, build
       - if: ${{ env.BUILDING }}
         name: Build and export pise-server image to Docker
         uses: docker/build-push-action@v3
         with:
-          context: ${{ format('{0}/proofscape/src/pise-server-context', github.workspace) }}
+          context: ${{ env.PISE_SERVER_CTX_DIR }}
           load: true
           tags: pise-server:${{env.PISE_VERS}}
           cache-to: type=gha
