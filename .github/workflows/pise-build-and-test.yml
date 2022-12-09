@@ -93,6 +93,9 @@ jobs:
         run: |
           source venv/bin/activate
           pip install -e .
+      - name: Make manage/conf.py
+        working-directory: pise/manage
+        run: cp sample_conf.py conf.py
       # -----------------------------------------
       # Check version number
       - name: Get version number from pise/client/package.json
@@ -152,7 +155,6 @@ jobs:
       - name: makestruct
         working-directory: pise/manage
         run: |
-          cp sample_conf.py conf.py
           source venv/bin/activate
           pfsc makestruct -y
       # -----------------------------------------
