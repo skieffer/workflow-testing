@@ -71,7 +71,7 @@ jobs:
         env:
           NPDR: ../../npdr.txt
         run: |
-          npm publish --dry-run 2>&1 > $NPDR
+          npm publish --dry-run 2>&1 | cat > $NPDR
           cat $NPDR | grep LICENSE
           cat $NPDR | grep NOTICE
       # npm publish
