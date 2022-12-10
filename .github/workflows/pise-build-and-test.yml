@@ -12,6 +12,11 @@ on:
         type: string
         default: 'v0.0.0'
         required: false
+      debug-level:
+        description: 'Debug level'
+        type: int
+        default: 1
+        required: false
 jobs:
   server-unit-tests:
     runs-on: ubuntu-22.04
@@ -119,7 +124,7 @@ jobs:
       # Set DEBUG_WORKFLOW to 1 to add certain debugging steps like printing
       # various types of output; set to 2 for more debugging output like
       # uploading certain artifacts for inspection.
-      DEBUG_WORKFLOW: 1
+      DEBUG_WORKFLOW: ${{ inputs.debug-level }}
     steps:
       # -----------------------------------------
       # CONFIGURE
