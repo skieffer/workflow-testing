@@ -762,11 +762,14 @@ jobs:
       # -----------------------------------------
       # Upload artifacts for publication job
       - if: ${{ inputs.pub-prep }}
-        name: Save docker images for upload
+        name: Make directory for pise docker images
+        run: mkdir pise_images
+      - if: ${{ inputs.pub-prep }}
+        name: Save pise docker images for upload
         run: |
-          docker save --output=images/pise-server.tar pise-server:${{env.PISE_VERS}}
-          docker save --output=images/pise-frontend.tar pise-frontend:${{env.PISE_VERS}}
-          docker save --output=images/pise.tar pise:${{env.PISE_VERS}}
+          docker save --output=pise_images/pise-server.tar pise-server:${{env.PISE_VERS}}
+          docker save --output=pise_images/pise-frontend.tar pise-frontend:${{env.PISE_VERS}}
+          docker save --output=pise_images/pise.tar pise:${{env.PISE_VERS}}
       - if: ${{ inputs.pub-prep }}
         name: Upload client/dist/ise
         uses: actions/upload-artifact@v3
@@ -778,4 +781,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: pise-images-${{env.PISE_VERS}}
-          path: images
+          path: pise_images
