@@ -598,12 +598,29 @@ jobs:
           docker logs ${{ env.TEST_DEPLOY_DIR }}-nginx-1 > selenium_results/docker_logs/nginx-1.txt 2>&1
           docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscweb-1 > selenium_results/docker_logs/pfscweb-1.txt 2>&1
           docker logs ${{ env.TEST_DEPLOY_DIR }}-pfscwork0-1 > selenium_results/docker_logs/pfscwork0-1.txt 2>&1
-      - name: Upload selenium results
-        if: always()
+      # Upload selenium results now as artifact only if at debug level 2.
+      - if: ${{ always() && env.DEBUG_WORKFLOW >= 2 }}
+        name: Upload selenium results
         uses: actions/upload-artifact@v3
         with:
           name: selenium_results
           path: ${{ env.PFSC_ROOT }}/selenium_results
+      # If not doing pub prep, at least dump logs for manual inspection
+      - if: ${{ always() && !inputs.pub-prep }}
+        name: Display nginx docker logs
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          cat selenium_results/docker_logs/nginx-1.txt
+      - if: ${{ always() && !inputs.pub-prep }}
+        name: Display pfscweb docker logs
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          cat selenium_results/docker_logs/pfscweb-1.txt
+      - if: ${{ always() && !inputs.pub-prep }}
+        name: Display pfscwork0 docker logs
+        working-directory: ${{ env.PFSC_ROOT }}
+        run: |
+          cat selenium_results/docker_logs/pfscwork0-1.txt
       # -----------------------------------------
       # Examine the written files
       - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
