@@ -4,10 +4,6 @@ jobs:
   server-unit-tests:
     runs-on: ubuntu-22.04
     services:
-      redis:
-        image: "redis:6.2.1"
-        ports:
-          - "6379:6379"
       redisgraph:
         image: "redislabs/redisgraph:2.4.13"
         ports: 
@@ -23,7 +19,7 @@ jobs:
       run:
         shell: bash
     env:
-      REDIS_URI: redis://localhost:6379
+      REDIS_URI: redis://localhost:6381
       GRAPHDB_URI: ${{ startsWith(matrix.graphdb, 'C') && 'redis://localhost:6381' || 'ws://localhost:8182/gremlin' }}
       PFSC_LIB_ROOT: ${{ format('{0}/lib', github.workspace) }}
       PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
