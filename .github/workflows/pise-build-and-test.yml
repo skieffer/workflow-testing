@@ -1,5 +1,21 @@
 name: pise-build-and-test
 on:
+  workflow_call:
+    inputs:
+      pub-prep:
+        description: 'Do extra steps in preparation for publication'
+        type: boolean
+        default: false
+        required: true
+      v-tag:
+        description: 'Version tag vM.m.p for pub-prep builds'
+        type: string
+        required: true
+      debug-level:
+        description: 'Debug level'
+        type: int
+        default: 1
+        required: false
   workflow_dispatch:
     inputs:
       pub-prep:
