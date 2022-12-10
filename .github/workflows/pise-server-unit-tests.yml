@@ -22,7 +22,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: src/pfsc-server
     env:
       REDIS_URI: redis://localhost:6379
       GRAPHDB_URI: ${{ startsWith(matrix.graphdb, 'C') && 'redis://localhost:6381' || 'ws://localhost:8182/gremlin' }}
@@ -30,6 +29,14 @@ jobs:
       PFSC_BUILD_ROOT: ${{ format('{0}/build', github.workspace) }}
       SECRET_KEY: fixed_value_for_testing
     steps:
+      # -----------------------------------------
+      # Install Python
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      # -----------------------------------------
+      # Checkout pise
       - name: Checkout pise
         uses: actions/checkout@v3
         with:
@@ -37,25 +44,41 @@ jobs:
           # FIXME
           repository: 'skieffer/pfsc-server'
           ref: 'recombine'
+      # -----------------------------------------
       - name: Make directory structure
-        working-directory: .
         run: |
-          mkdir -p {lib,build,src}
-          cd src; ln -s ../pise/server pfsc-server
-      - name: Install Python
-        uses: actions/setup-python@v3
+          mkdir -p {lib,build}
+      # -----------------------------------------
+      # Install server/venv, preferably from cache
+      - name: Cache server/venv
+        id: cache-server-venv
+        uses: actions/cache@v3
         with:
-          python-version: '3.8'
-      - name: Install pfsc-server requirements
+          path: pise/server/venv
+          key: cache-server-venv-${{ hashFiles('pise/server/req/*') }}
+      - if: ${{ steps.cache-server-venv.outputs.cache-hit != 'true' }}
+        name: Install server/venv
+        working-directory: pise/server
         run: |
-          python -m pip install --upgrade pip
-          ./req/install_testing.sh
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          ./req/install.sh
+      # -----------------------------------------
       - name: Make test repos
+        working-directory: pise/server
         run: |
           git config --global user.email "pfsc.unit.tester@localhost"
           git config --global user.name "pfsc unit tester"
+          source venv/bin/activate
           python -m tests.util.make_repos
       - name: Build test repos
-        run : python -m tests.util.build_repos
+        working-directory: pise/server
+        run : |
+          source venv/bin/activate
+          python -m tests.util.build_repos
       - name: Run unit tests
-        run: pytest tests
+        working-directory: pise/server
+        run: |
+          source venv/bin/activate
+          pytest tests
