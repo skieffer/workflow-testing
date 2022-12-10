@@ -36,7 +36,6 @@ jobs:
       # -----------------------------------------
       - name: Make directories
         run: |
-          mkdir images
           mkdir pise/client/dist
       # -----------------------------------------
       # Download artifacts from the build-and-test job
@@ -45,21 +44,19 @@ jobs:
         with:
           name: client-dist-ise-${{env.PISE_VERS}}
           path: pise/client/dist/ise
-      - name: Download pise-server.tar
+      - name: Download pise docker images
         uses: actions/download-artifact@v3
         with:
-          name: pise-server-${{env.PISE_VERS}}
-          path: images/pise-server.tar
-      - name: Download pise-frontend.tar
-        uses: actions/download-artifact@v3
-        with:
-          name: pise-frontend-${{env.PISE_VERS}}
-          path: images/pise-frontend.tar
-      - name: Download pise.tar
-        uses: actions/download-artifact@v3
-        with:
-          name: pise-${{env.PISE_VERS}}
-          path: images/pise.tar
+          name: pise-images-${{env.PISE_VERS}}
+          path: images
+      # -----------------------------------------
+      # Basic checks for visual inspection
+      # client/dist/ise
+      - name: Check client/dist/ise contents
+        working-directory: pise/client
+        run: ls -l dist/ise
+      - name: Check images
+        run: ls -l images
       # -----------------------------------------
       - name: Load docker images
         run: |
@@ -67,11 +64,7 @@ jobs:
           docker load --input=images/pise-frontend.tar
           docker load --input=images/pise.tar
       # -----------------------------------------
-      # Basic checks for visual inspection
-      # client/dist/ise
-      - name: Check client/dist/ise contents
-        working-directory: pise/client
-        run: ls -l dist/ise
+      # More checks for visual inspection
       # pise-server
       - name: Check pise-server working directory contents
         run: docker run --rm --entrypoint=bash pise-server:$PISE_VERS -c "ls -l"

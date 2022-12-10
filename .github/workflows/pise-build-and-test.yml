@@ -774,20 +774,8 @@ jobs:
           name: client-dist-ise-${{env.PISE_VERS}}
           path: pise/client/dist/ise
       - if: ${{ inputs.pub-prep }}
-        name: Upload pise-server.tar
+        name: Upload pise docker images
         uses: actions/upload-artifact@v3
         with:
-          name: pise-server-${{env.PISE_VERS}}
-          path: images/pise-server.tar
-      - if: ${{ inputs.pub-prep }}
-        name: Upload pise-frontend.tar
-        uses: actions/upload-artifact@v3
-        with:
-          name: pise-frontend-${{env.PISE_VERS}}
-          path: images/pise-frontend.tar
-      - if: ${{ inputs.pub-prep }}
-        name: Upload pise.tar
-        uses: actions/upload-artifact@v3
-        with:
-          name: pise-${{env.PISE_VERS}}
-          path: images/pise.tar
+          name: pise-images-${{env.PISE_VERS}}
+          path: images
