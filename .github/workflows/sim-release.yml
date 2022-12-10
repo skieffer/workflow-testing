@@ -1,9 +1,15 @@
 name: sim-release
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    inputs:
+      v-tag:
+        description: 'Version tag vM.m.p'
+        type: string
+        default: 'v0.1.2'
+        required: true
+  #push:
+  #  tags:
+  #    - 'v[0-9]+.[0-9]+.[0-9]+*'
 jobs:
   run-tests:
     uses: ./.github/workflows/sim-testing.yml
@@ -35,7 +41,8 @@ jobs:
       # Number from tag
       - name: get version number from tag
         id: get-vers-from-tag
-        run: echo "${{github.ref_name}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
+        #run: echo "${{github.ref_name}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
+        run: echo "${{inputs.v-tag}}" | sed 's/v/version=/' >> $GITHUB_OUTPUT
       # Number from file
       - name: check version from package.json
         id: get-vers-from-file
