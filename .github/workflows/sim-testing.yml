@@ -1,6 +1,6 @@
 name: sim-testing
 on:
-  pull_request:
+  #pull_request:
   #push:
   #  branches:
   #    - '**'

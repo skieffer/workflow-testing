@@ -1,5 +1,6 @@
 name: sim-release
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
@@ -54,15 +55,18 @@ jobs:
         id: switch
         run: |
           echo "pub-npm=no" >> $GITHUB_OUTPUT
-          echo "pub-dh=yes" >> $GITHUB_OUTPUT
+          echo "pub-dh=no" >> $GITHUB_OUTPUT
       # -------------------------------------
       # npm
       # Check that certain files will be included
       - name: Check npm publish dry-run
         working-directory: repo/js
+        env:
+          NPDR: ../../npdr.txt
         run: |
-          npm publish --dry-run 2>&1 | grep LICENSE
-          npm publish --dry-run 2>&1 | grep NOTICE
+          npm publish --dry-run 2>&1 > $NPDR
+          cat $NPDR | grep LICENSE
+          cat $NPDR | grep NOTICE
       # npm publish
       - if: ${{ steps.switch.outputs.pub-npm == 'yes' }}
         name: Do npm publish
