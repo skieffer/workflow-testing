@@ -430,6 +430,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash pise-server:${{env.PISE_VERS}} -c "ls -l" > $WDLL
           cat $WDLL
+          echo "------------------------------"
           grep LICENSES.txt $WDLL
           grep NOTICE.txt $WDLL
           test `grep LICENSES.txt $WDLL | awk '{print $5}'` -ge 200000
@@ -488,6 +489,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash pise-frontend:${{env.PISE_VERS}} -c "ls -l" > $WDLL
           cat $WDLL
+          echo "------------------------------"
           grep LICENSES.txt $WDLL
           grep NOTICE.txt $WDLL
           test `grep LICENSES.txt $WDLL | awk '{print $5}'` -ge 100000
@@ -563,6 +565,7 @@ jobs:
         run: |
           docker run --rm --entrypoint=bash pise:${{env.PISE_VERS}} -c "ls -l" > $WDLL
           cat $WDLL
+          echo "------------------------------"
           grep LICENSES.txt $WDLL
           grep NOTICE.txt $WDLL
           grep about.json $WDLL
