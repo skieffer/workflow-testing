@@ -93,7 +93,7 @@ jobs:
           docker exec \
             -e FLASK_APP=pfsc \
             -w /home/pfsc/proofscape/src/pfsc-server \
-            pise bash -c "flask pfsc build -rv gh.toepproj.lit -t v0.23.0
+            pise bash -c "flask pfsc build -rv gh.toepproj.lit -t v0.23.0"
       # -----------------------------------------
       # Now we build our content repo. This is our test, i.e. simply to see if
       # we can build.
