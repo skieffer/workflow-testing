@@ -87,6 +87,14 @@ jobs:
             --mount 'type=volume,src=${{env.LIB_VOLUME}},dst=/proofscape/lib' \
             proofscape/pise:$PISE_TAG
       # -----------------------------------------
+      # Build dependencies
+      - name: Build dependencies
+        run: |
+          docker exec \
+            -e FLASK_APP=pfsc \
+            -w /home/pfsc/proofscape/src/pfsc-server \
+            pise bash -c "flask pfsc build -rv gh.toepproj.lit -t v0.23.0
+      # -----------------------------------------
       # Now we build our content repo. This is our test, i.e. simply to see if
       # we can build.
       - name: Try building
