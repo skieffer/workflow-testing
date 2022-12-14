@@ -32,6 +32,11 @@ jobs:
         with:
           path: ${{steps.conf.outputs.content-dir}}
           repository: ${{env.CONTENT_REPO}}
+      # TODO:
+      #  This project happens not to have any dependencies (i.e. other pfsc
+      #  content repos on which it draws). In general, there should be a step
+      #  here where we read the root level `__.pfsc` module and then checkout
+      #  all the dependencies (at the right versions) that it names.
       # -----------------------------------------
       # Obtain pise OCA image, preferably from cache
       - name: Cache pise OCA
