@@ -43,6 +43,7 @@ jobs:
         with:
           path: proofscape/lib/gh/toepproj/lit
           repository: toepproj/lit
+          ref: v0.23.0
       # -----------------------------------------
       # Obtain pise OCA image, preferably from cache
       - name: Cache pise OCA
