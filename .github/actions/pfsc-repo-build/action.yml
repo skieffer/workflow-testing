@@ -3,35 +3,27 @@ description: "Builds a Proofscape content repo"
 inputs:
   content-repo:
     description: "The owner/reponame of the Proofscape content repo to be built"
-    type: string
     default: ${{ github.repository }}
   pise-vers:
     description: "PISE version to use when building"
-    type: string
     default: latest
   workspace:
     description: "Working directory"
-    type: string
     default: ${{ github.workspace }}
   lib-volume:
     description: "Name of docker volume to use for the lib directory"
-    type: string
     default: pfsc-lib
   build-volume:
     description: "Name of docker volume to use for the build directory"
-    type: string
     default: pfsc-build
   gdb-volume:
     description: "Name of docker volume to use for the graphdb directory"
-    type: string
     default: pfsc-gdb
   container-persist:
     description: "Keep the PISE container running after completing"
-    type: boolean
-    default: false
+    default: no
   debug-level:
     description: "Controls diagnostic log output"
-    type: number
     default: 1
 runs:
   using: composite
@@ -103,7 +95,7 @@ runs:
           -w /home/pfsc/proofscape/src/pfsc-server \
           pise bash -c "flask pfsc build --auto-deps -rv ${{steps.conf.outputs.content-libpath}}"
     # Stop the container
-    - if: ${{ ! inputs.container-persist }}
+    - if: ${{ inputs.container-persist != 'yes' }}
       name: Stop pise
       shell: bash
       run: docker stop pise
