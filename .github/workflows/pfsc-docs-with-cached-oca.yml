@@ -23,7 +23,7 @@ jobs:
           key: cache-oca-image-${{env.PISE_TAG}}
       - if: ${{ steps.cache-oca.outputs.cache-hit != 'true' }}
         name: Build OCA image
-        uses: ./.github/actions/build-oca.yml
+        uses: ./.github/actions/build-oca
         with:
           oca-vers: ${{env.PISE_TAG}}
       # Load and re-tag
