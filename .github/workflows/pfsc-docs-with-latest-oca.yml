@@ -40,7 +40,7 @@ jobs:
       - name: Download oca docker image
         uses: actions/download-artifact@v3
         with:
-          name: oca-image-${{env.PISE_VERS}}
+          name: oca-image-${{env.PISE_TAG}}
           path: images
       # Load and re-tag
       - name: Load pise OCA image, and re-tag
