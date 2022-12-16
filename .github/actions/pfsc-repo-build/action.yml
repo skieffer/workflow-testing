@@ -25,6 +25,10 @@ inputs:
     description: "Name of docker volume to use for the graphdb directory"
     type: string
     default: pfsc-gdb
+  container-persist:
+    description: "Keep the PISE container running after completing"
+    type: boolean
+    default: false
   debug-level:
     description: "Controls diagnostic log output"
     type: number
@@ -98,3 +102,8 @@ runs:
           -e FLASK_APP=pfsc \
           -w /home/pfsc/proofscape/src/pfsc-server \
           pise bash -c "flask pfsc build --auto-deps -rv ${{steps.conf.outputs.content-libpath}}"
+    # Stop the container
+    - if: ${{ ! inputs.container-persist }}
+      name: Stop pise
+      shell: bash
+      run: docker stop pise
