@@ -13,6 +13,7 @@ runs:
   steps:
     # Set env vars
     - name: Set env vars
+      shell: bash
       run: |
         echo "PFSC_ROOT=${{ format('{0}/proofscape', github.workspace) }}" >> $GITHUB_ENV
         echo "PISE_OCA_CTX_TAR=${{ format('{0}/contexts/pise-oca-context.tar.gz', github.workspace) }}" >> $GITHUB_ENV
@@ -46,6 +47,7 @@ runs:
     - if: ${{ steps.cache-manage-venv.outputs.cache-hit != 'true' }}
       name: Form the manage/venv directory
       working-directory: pise/manage
+      shell: bash
       run: |
         python -m venv venv
         source venv/bin/activate
@@ -54,11 +56,13 @@ runs:
       # Need this even if cache hit for venv dir, else will get error:
       #   importlib.metadata.PackageNotFoundError: pfsc-manage
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         pip install -e .
     - name: Make manage/conf.py
       working-directory: pise/manage
+      shell: bash
       run: cp sample_conf.py conf.py
     # -----------------------------------------
     # Install server/venv, preferably from cache
@@ -71,6 +75,7 @@ runs:
     - if: ${{ steps.cache-server-venv.outputs.cache-hit != 'true' }}
       name: Install server/venv
       working-directory: pise/server
+      shell: bash
       run: |
         python -m venv venv
         source venv/bin/activate
@@ -87,17 +92,20 @@ runs:
     - if: ${{ steps.cache-client-node_modules.outputs.cache-hit != 'true' }}
       name: Clean-install client/node_modules
       working-directory: pise/client
+      shell: bash
       run: npm ci
     # -----------------------------------------
     # Make directories with pfsc makestruct
     - name: makestruct
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         pfsc makestruct -y
     # -----------------------------------------
     # Make other directories
     - name: Make other directories
+      shell: bash
       run: |
         mkdir images
         mkdir ${{env.PISE_IMAGES_DIR}}
@@ -107,6 +115,7 @@ runs:
     - name: Determine version numbers
       id: vers-nums
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         echo "PFSC_PDF_VERS=`pfsc check version pfsc-pdf`" >> $GITHUB_OUTPUT
@@ -123,9 +132,11 @@ runs:
         key: cache-redisgraph-${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
     - if: ${{ steps.cache-redisgraph.outputs.cache-hit == 'true' }}
       name: Load redisgraph
+      shell: bash
       run: docker load --input=images/redisgraph.tar
     - if: ${{ steps.cache-redisgraph.outputs.cache-hit != 'true' }}
       name: Pull redisgraph
+      shell: bash
       run: |
         docker pull redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
         docker save --output=images/redisgraph.tar redislabs/redisgraph:${{ steps.vers-nums.outputs.REDISGRAPH_VERS }}
@@ -148,6 +159,7 @@ runs:
     - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
       name: Check pfsc-pdf installation
       working-directory: ${{env.PFSC_ROOT}}/src/pfsc-pdf/build/generic
+      shell: bash
       run: |
         ls -l build
         ls -l web
@@ -171,6 +183,7 @@ runs:
     - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
       name: Check pfsc-demo-repos installation
       working-directory: ${{env.PFSC_ROOT}}/src/pfsc-demo-repos
+      shell: bash
       run: ls -l workbook
     # -----------------------------------------
     # Install Pyodide, preferably from cache
@@ -183,6 +196,7 @@ runs:
     - if: ${{ steps.cache-pyodide.outputs.cache-hit != 'true' }}
       name: Install Pyodide
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         pfsc get pyodide
@@ -190,6 +204,7 @@ runs:
     - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
       name: Check Pyodide installation
       working-directory: ${{env.PFSC_ROOT}}/src/pyodide/v${{steps.vers-nums.outputs.PYODIDE_VERS}}
+      shell: bash
       run: ls -l
     # -----------------------------------------
     # Install wheels, preferably from cache
@@ -202,6 +217,7 @@ runs:
     - if: ${{ steps.cache-wheels.outputs.cache-hit != 'true' }}
       name: Install wheels
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         pfsc get wheels
@@ -209,6 +225,7 @@ runs:
     - if: ${{ env.DEBUG_WORKFLOW >= 1 }}
       name: Check wheels installation
       working-directory: ${{env.PFSC_ROOT}}/src/whl
+      shell: bash
       run: ls -l
     # -----------------------------------------
     # TESTING SHORT OUT
@@ -222,6 +239,7 @@ runs:
     # Build client-side JS code
     - name: Build client-side code
       working-directory: pise/client
+      shell: bash
       run: npm run build:dev
     # -----------------------------------------
     # OCA
@@ -229,6 +247,7 @@ runs:
     # Build pise (OCA) image
     - name: Make pise OCA build context
       working-directory: pise/manage
+      shell: bash
       run: |
         source venv/bin/activate
         pfsc build oca --tar-path=${{env.PISE_OCA_CTX_TAR}} ${{env.PISE_VERS}}
@@ -248,4 +267,5 @@ runs:
     # Set output
     - name: Set output
       id: set-results
+      shell: bash
       run: echo "path=${{env.PISE_IMAGES_DIR}}/oca.tar" >> $GITHUB_OUTPUT
