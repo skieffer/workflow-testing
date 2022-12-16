@@ -6,6 +6,7 @@ jobs:
     with:
       oca-vers: testing
   build-test:
+    needs: build-oca
     runs-on: ubuntu-22.04
     defaults:
       run:
