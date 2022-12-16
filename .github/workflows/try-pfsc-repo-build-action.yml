@@ -1,0 +1,14 @@
+name: try-pfsc-repo-build-action
+on: workflow_dispatch
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout wt
+        uses: actions/checkout@v3
+        with:
+          path: wt
+      - name: Try repo build action
+        uses: ./wt/.github/actions/pfsc-repo-build
+        with:
+          content-repo: "proofscape/docs"
