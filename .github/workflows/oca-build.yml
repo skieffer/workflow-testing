@@ -4,11 +4,13 @@ on:
     inputs:
       oca-vers:
         description: "OCA Version tag"
+        type: string
         default: testing
   workflow_call:
     inputs:
       oca-vers:
         description: "OCA Version tag"
+        type: string
         default: testing
 jobs:
   build-oca:
