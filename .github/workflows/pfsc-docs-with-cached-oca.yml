@@ -14,6 +14,11 @@ jobs:
       CONTENT_REPO: "proofscape/docs"
     steps:
       # -----------------------------------------
+      - name: Checkout wt
+        uses: actions/checkout@v3
+        with:
+          path: wt
+      # -----------------------------------------
       # Obtain pise OCA image, preferably from cache
       - name: Cache OCA image
         id: cache-oca
@@ -23,7 +28,7 @@ jobs:
           key: cache-oca-image-${{env.PISE_TAG}}
       - if: ${{ steps.cache-oca.outputs.cache-hit != 'true' }}
         name: Build OCA image
-        uses: ./.github/actions/build-oca
+        uses: wt/.github/actions/build-oca
         with:
           oca-vers: ${{env.PISE_TAG}}
       # Load and re-tag
