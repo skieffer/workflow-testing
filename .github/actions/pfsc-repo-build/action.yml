@@ -16,7 +16,7 @@ inputs:
     description: >
       PISE version to use when building. This is the tag for the
       `proofscape/pise` docker image we use to perform the build.
-      Default: latest.
+      Default: latest
     default: latest
   workspace:
     description: >
@@ -29,27 +29,32 @@ inputs:
       Name of docker volume to use for the lib directory. After the build
       completes (if successful), this volume will be populated with the
       contents of `./proofscape/lib`. Can be useful in later steps, if desired.
-      Default: `pfsc-lib`.
+      Default: `pfsc-lib`
     default: pfsc-lib
   build-volume:
     description: >
       Name of docker volume to use for the build directory. After the build
       completes (if successful), this volume will be populated with the
       contents of `./proofscape/build`. Can be useful in later steps, if desired.
-      Default: `pfsc-build`.
+      Default: `pfsc-build`
     default: pfsc-build
   gdb-volume:
     description: >
       Name of docker volume to use for the graphdb directory. After the build
       completes (if successful), this volume will be populated with the
       contents of `./proofscape/graphdb`. Can be useful in later steps, if desired.
-      Default: `pfsc-gdb`.
+      Default: `pfsc-gdb`
     default: pfsc-gdb
   container-persist:
     description: >
       If "yes", keep the PISE container running after completing.
-      The name of the container will be `pise`. Default "no".
+      Default "no"
     default: no
+  container-name:
+    description: >
+      The name of the PISE docker container in which the build takes place.
+      Default: pise
+    default: pise
   debug-level:
     description: "Controls diagnostic log output"
     default: 1
@@ -116,7 +121,7 @@ runs:
       shell: bash
       run: |
         docker run --rm -d \
-          --name=pise \
+          --name=${{inputs.container-name}} \
           --mount 'type=volume,src=${{inputs.lib-volume}},dst=/proofscape/lib' \
           --mount 'type=volume,src=${{inputs.build-volume}},dst=/proofscape/build' \
           --mount 'type=volume,src=${{inputs.gdb-volume}},dst=/proofscape/graphdb' \
@@ -129,8 +134,12 @@ runs:
         docker exec \
           -e FLASK_APP=pfsc \
           -w /home/pfsc/proofscape/src/pfsc-server \
-          pise bash -c "flask pfsc build --auto-deps -rv ${{steps.conf.outputs.content-libpath}} -t ${{inputs.content-vers}}"
-    # Stop the container
+          ${{inputs.container-name}} bash -c "\
+            flask pfsc build --auto-deps \
+              -rv ${{steps.conf.outputs.content-libpath}} \
+              -t ${{inputs.content-vers}} \
+          "
+    # Stop the container (optionally)
     - if: ${{ inputs.container-persist != 'yes' }}
       name: Stop pise
       shell: bash
