@@ -24,6 +24,7 @@ jobs:
           content-repo: "proofscape/docs"
           content-vers: ${{inputs.content-vers}}
           container-persist: ${{inputs.container-persist && 'yes' || 'no'}}
-      - name: Try to use container
+      - if: ${{inputs.container-persist}}
+        name: Try to use container
         run: |
           docker exec pise bash -c "ls -l"
