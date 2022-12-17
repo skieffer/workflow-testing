@@ -6,6 +6,10 @@ on:
         description: "version at which to build pfsc content repo"
         type: string
         default: "WIP"
+      container-persist:
+        description: "keep container running"
+        type: boolean
+        default: false
 jobs:
   build-test:
     runs-on: ubuntu-22.04
@@ -19,3 +23,8 @@ jobs:
         with:
           content-repo: "proofscape/docs"
           content-vers: ${{inputs.content-vers}}
+          container-persist: ${{inputs.container-persist && 'yes' || 'no'}}
+      - if: ${{inputs.container-persist}}
+        name: Try to use container
+        run: |
+          docker exec pise bash -c "ls -l"
