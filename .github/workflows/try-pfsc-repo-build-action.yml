@@ -1,5 +1,11 @@
 name: try-pfsc-repo-build-action
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      content-vers:
+        description: "version at which to build pfsc content repo"
+        type: string
+        default: "WIP"
 jobs:
   build-test:
     runs-on: ubuntu-22.04
@@ -12,3 +18,4 @@ jobs:
         uses: ./wt/.github/actions/pfsc-repo-build
         with:
           content-repo: "proofscape/docs"
+          content-vers: ${{inputs.content-vers}}

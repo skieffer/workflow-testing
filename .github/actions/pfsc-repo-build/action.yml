@@ -4,6 +4,9 @@ inputs:
   content-repo:
     description: "The owner/reponame of the Proofscape content repo to be built"
     default: ${{ github.repository }}
+  content-vers:
+    description: "The version at which to build the Proofscape content repo"
+    default: WIP
   pise-vers:
     description: "PISE version to use when building"
     default: latest
@@ -93,7 +96,7 @@ runs:
         docker exec \
           -e FLASK_APP=pfsc \
           -w /home/pfsc/proofscape/src/pfsc-server \
-          pise bash -c "flask pfsc build --auto-deps -rv ${{steps.conf.outputs.content-libpath}}"
+          pise bash -c "flask pfsc build --auto-deps -rv ${{steps.conf.outputs.content-libpath}} -t ${{inputs.content-vers}}"
     # Stop the container
     - if: ${{ inputs.container-persist != 'yes' }}
       name: Stop pise
