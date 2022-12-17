@@ -120,7 +120,7 @@ runs:
     - name: Start pise
       shell: bash
       run: |
-        docker run --rm -d \
+        docker run -d \
           --name=${{inputs.container-name}} \
           --mount 'type=volume,src=${{inputs.lib-volume}},dst=/proofscape/lib' \
           --mount 'type=volume,src=${{inputs.build-volume}},dst=/proofscape/build' \
