@@ -45,12 +45,19 @@ runs:
       run: |
         mkdir -p ${{steps.conf.outputs.content-dir}}
     # Checkout
-    - name: Checkout
+    - if: ${{ inputs.content-vers == 'WIP' }}
+      name: Checkout @WIP
       uses: actions/checkout@v3
       with:
         path: ${{steps.conf.outputs.content-dir}}
         repository: ${{inputs.content-repo}}
-        ref: ${{ inputs.content-vers == 'WIP' && '' || inputs.content-vers }}
+    - if: ${{ inputs.content-vers != 'WIP' }}
+      name: Checkout @${{inputs.content-vers}}
+      uses: actions/checkout@v3
+      with:
+        path: ${{steps.conf.outputs.content-dir}}
+        repository: ${{inputs.content-repo}}
+        ref: ${{inputs.content-vers}}
     # -----------------------------------------
     # Form and populate a `lib` volume
     - name: Form and populate lib volume
