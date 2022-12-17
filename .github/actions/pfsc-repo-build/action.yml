@@ -50,6 +50,7 @@ runs:
       with:
         path: ${{steps.conf.outputs.content-dir}}
         repository: ${{inputs.content-repo}}
+        ref: ${{ inputs.content-vers == 'WIP' && '' || inputs.content-vers }}
     # -----------------------------------------
     # Form and populate a `lib` volume
     - name: Form and populate lib volume
