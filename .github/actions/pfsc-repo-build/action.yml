@@ -2,28 +2,53 @@ name: pfsc-repo-build
 description: "Builds a Proofscape content repo"
 inputs:
   content-repo:
-    description: "The owner/reponame of the Proofscape content repo to be built"
+    description: >
+      The owner/reponame of the Proofscape content repo to be built.
+      Defaults to the value of `github.repository`.
     default: ${{ github.repository }}
   content-vers:
-    description: "The version at which to build the Proofscape content repo"
+    description: >
+      The version at which to build the Proofscape content repo.
+      If unspecified, build @WIP, meaning the reference or SHA that triggered
+      the workflow, or the default branch if no such event.
     default: WIP
   pise-vers:
-    description: "PISE version to use when building"
+    description: >
+      PISE version to use when building. This is the tag for the
+      `proofscape/pise` docker image we use to perform the build.
+      Default: latest.
     default: latest
   workspace:
-    description: "Working directory"
+    description: >
+      Working directory, i.e. space in which to do things like checkout the
+      content repo. The latter will be checked out under `./proofscape/lib/gh`
+      relative to this directory. Default is the value of `github.workspace`.
     default: ${{ github.workspace }}
   lib-volume:
-    description: "Name of docker volume to use for the lib directory"
+    description: >
+      Name of docker volume to use for the lib directory. After the build
+      completes (if successful), this volume will be populated with the
+      contents of `./proofscape/lib`. Can be useful in later steps, if desired.
+      Default: `pfsc-lib`.
     default: pfsc-lib
   build-volume:
-    description: "Name of docker volume to use for the build directory"
+    description: >
+      Name of docker volume to use for the build directory. After the build
+      completes (if successful), this volume will be populated with the
+      contents of `./proofscape/build`. Can be useful in later steps, if desired.
+      Default: `pfsc-build`.
     default: pfsc-build
   gdb-volume:
-    description: "Name of docker volume to use for the graphdb directory"
+    description: >
+      Name of docker volume to use for the graphdb directory. After the build
+      completes (if successful), this volume will be populated with the
+      contents of `./proofscape/graphdb`. Can be useful in later steps, if desired.
+      Default: `pfsc-gdb`.
     default: pfsc-gdb
   container-persist:
-    description: "Keep the PISE container running after completing"
+    description: >
+      If "yes", keep the PISE container running after completing.
+      The name of the container will be `pise`. Default "no".
     default: no
   debug-level:
     description: "Controls diagnostic log output"
