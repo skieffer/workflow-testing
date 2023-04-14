@@ -13,8 +13,12 @@ jobs:
         id: stepId1
         run: |
           chromium --version
-          chromium --version | sed -e "s/ /=/" | sed -e "s/ //g" >> $GITHUB_OUTPUT
+          chromium --version | sed -e "s/ /Version=/" | sed -e "s/ //g" >> $GITHUB_OUTPUT
       - name: step2
         id: stepId2
         run: |
-          echo "https://chromedriver.storage.googleapis.com/${{ steps.stepId1.outputs.Chromium }}/chromedriver_linux64.zip"
+          echo "chromedriver-url=https://chromedriver.storage.googleapis.com/${{ steps.stepId1.outputs.ChromiumVersion }}/chromedriver_linux64.zip" >> $GITHUB_OUTPUT
+      - name: step3
+        id: stepId3
+        run: |
+          echo "${{ steps.stepId2.outputs.chromedriver-url }}"
