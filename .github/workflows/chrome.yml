@@ -17,9 +17,9 @@ jobs:
       - name: step2
         id: stepId2
         run: |
-          echo "chromedriver-url=https://chromedriver.storage.googleapis.com/${{ steps.stepId1.outputs.ChromeVersion }}/chromedriver_linux64.zip" >> $GITHUB_OUTPUT
+          echo "chromedriver-url=https://chromedriver.storage.googleapis.com/${{ steps.stepId1.outputs.ChromeVersion }}/chromedriver_linux64.zip" >> $GITHUB_ENV
       - name: step3
         id: stepId3
         run: |
-          wget ${{ steps.stepId2.outputs.chromedriver-url }}
+          wget ${{ env.chromedriver-url }}
           unzip chromedriver_linux64.zip
