@@ -21,4 +21,5 @@ jobs:
       - name: step3
         id: stepId3
         run: |
-          echo "${{ steps.stepId2.outputs.chromedriver-url }}"
+          wget ${{ steps.stepId2.outputs.chromedriver-url }}
+          unzip chromedriver_linux64.zip
