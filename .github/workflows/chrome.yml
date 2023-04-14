@@ -13,7 +13,7 @@ jobs:
         id: stepId1
         run: |
           chromium --version
-          chromium --version | sed -e "s/ /=/" >> $GITHUB_OUTPUT
+          chromium --version | sed -e "s/ /=/" | sed -e "s/ //g" >> $GITHUB_OUTPUT
       - name: step2
         id: stepId2
         run: |
