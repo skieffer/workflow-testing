@@ -1,0 +1,16 @@
+name: chrome1
+on: workflow_dispatch
+jobs:
+  test-build:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      FOO: bar
+    steps:
+      - name: step1
+        id: stepId1
+        run: |
+          chrome --version
+          chrome --version >> $GITHUB_OUTPUT
