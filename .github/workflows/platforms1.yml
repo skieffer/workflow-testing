@@ -1,0 +1,24 @@
+name: platforms1
+on: workflow_dispatch
+jobs:
+  test-platform-build:
+    runs-on: ubuntu-22.04
+    steps:
+      -
+        run: |
+          echo "bar" > foo
+          echo "FROM alpine:3.5" > Dockerfile
+          echo "COPY foo /" >> Dockerfile
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          tags: user/app:1.2.3
+      -
+        run: |
+          docker images
