@@ -22,4 +22,9 @@ jobs:
           tags: foo/bar:1.2.3
       -
         run: |
-          find foobarimages
+          echo "foobarimages"
+          ls -l foobarimages
+          echo "foobarimages/linux_amd64"
+          ls -l foobarimages/linux_amd64
+          echo "foobarimages/linux_arm64"
+          ls -l foobarimages/linux_arm64
