@@ -63,6 +63,14 @@ jobs:
           echo "Tag version: ${{steps.get-vers-from-tag.outputs.version}}"
           echo "File version: ${{steps.get-vers-from-file.outputs.version}}"
           test "${{steps.get-vers-from-tag.outputs.version}}" = "${{steps.get-vers-from-file.outputs.version}}"
+      # Determine secondary docker image tag
+      - name: Determine secondary docker image tag
+        id: second-tag
+        run: |
+          echo "${{steps.get-vers-from-tag.outputs.version}}" | sed -e "s/.*-.*/secondTag=edge/" | sed -e "s/[0-9].*/secondTag=latest/" >> $GITHUB_OUTPUT
+      - name: Check second tag
+        run: |
+          echo "Second tag: ${{steps.second-tag.outputs.secondTag}}"
       # -------------------------------------
       # Publishing
       # Manually control whether we're doing the publishing steps or not
@@ -116,4 +124,4 @@ jobs:
           push: true
           tags: |
             skieffer/wflow01:${{steps.get-vers-from-tag.outputs.version}}
-            skieffer/wflow01:edge
+            skieffer/wflow01:${{steps.second-tag.outputs.secondTag}}
