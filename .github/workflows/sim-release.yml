@@ -5,7 +5,7 @@ on:
       v-tag:
         description: 'Version tag vM.m.p'
         type: string
-        default: 'v0.1.3-a0'
+        default: 'v0.1.3-a1'
         required: true
       pub-npm:
         description: 'Publish to NPM'
@@ -82,14 +82,18 @@ jobs:
           npm publish --dry-run 2>&1 | cat > $NPDR
           cat $NPDR | grep LICENSE
           cat $NPDR | grep NOTICE
+      # Set up npm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
       # npm publish
       - if: ${{inputs.pub-npm}}
         name: Do npm publish
         working-directory: repo/js
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_PUBLISH_01}}" > ~/.npmrc
-          echo "//registry.npmjs.org/:always-auth=true" >> ~/.npmrc
-          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_01 }}
+        run: npm publish
       # -------------------------------------
       # Docker Hub
       - name: Extract Docker context
@@ -110,4 +114,6 @@ jobs:
           context: build_context_dir
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: skieffer/wflow01:${{steps.get-vers-from-tag.outputs.version}}
+          tags: |
+            skieffer/wflow01:${{steps.get-vers-from-tag.outputs.version}}
+            skieffer/wflow01:edge
