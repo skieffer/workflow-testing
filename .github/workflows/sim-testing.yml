@@ -6,6 +6,12 @@ on:
   #    - '**'
   #  tags-ignore:
   #    - '**'
+  workflow_dispatch:
+    inputs:
+      save-release-artifacts:
+        description: 'Whether to upload artifacts for release processing'
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       save-release-artifacts:
@@ -42,25 +48,27 @@ jobs:
         run: grep pass c/foo
       # ---------------------------------------------
       # Docker
-      # Install buildx
+      # Make and zip context directory
+      - name: Make and zip a context dir
+        run: |
+          mkdir context
+          mkdir contexts
+          cp -r repo context
+          cp -r other context
+          cp repo/c/Dockerfile context
+          cd context; tar -czh -f ${{github.workspace}}/contexts/context.tar.gz .
+      # Set up buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      # Build image as tar file
-      # See https://docs.docker.com/build/ci/github-actions/examples/#share-built-image-between-jobs
-      - name: Make dir for image
-        run: mkdir images
-      - name: Build image as tar file
-        uses: docker/build-push-action@v3
+      # Build image for testing
+      - name: Build image for testing
+        uses: docker/build-push-action@v4
         with:
-          context: .
-          file: repo/c/Dockerfile
+          context: context
           tags: wflow01:testing
-          outputs: type=docker,dest=images/wflow01.tar
+          load: true
           cache-to: type=gha
           cache-from: type=gha
-      # Load image
-      - name: Load image
-        run: docker load --input images/wflow01.tar
       # Run, for proof of concept
       - name: Check image contents
         run: docker run --rm wflow01:testing sh -c "ls -l /usr/local/share"
@@ -74,4 +82,4 @@ jobs:
           path: |
             repo
             other
-            images
+            contexts
