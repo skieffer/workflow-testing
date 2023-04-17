@@ -5,7 +5,7 @@ on:
       v-tag:
         description: 'Version tag vM.m.p'
         type: string
-        default: 'v0.1.3-a1'
+        default: 'v0.1.3'
         required: true
       pub-npm:
         description: 'Publish to NPM'
