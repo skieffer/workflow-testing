@@ -2,7 +2,6 @@ name: matrix1c
 on: workflow_dispatch
 jobs:
   job2:
-    needs: job1
     runs-on: ubuntu-latest
     strategy:
       matrix:
