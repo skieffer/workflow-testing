@@ -1,0 +1,20 @@
+name: services1
+on: workflow_dispatch
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    outputs:
+      redis_tag: ${{ steps.set-service-tag.outputs.tag }}
+    steps:
+      - id: set-service-tag
+        run: echo "tag=8.4.0-bookworm" >> $GITHUB_OUTPUT
+  job2:
+    needs: job1
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: ${{ format('redis:{0}', needs.job1.outputs.redis_tag) }}
+        ports:
+          - "6379:6379"
+    steps:
+      - run: echo "Foo"
