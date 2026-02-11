@@ -1,0 +1,15 @@
+name: matrix1w
+on: workflow_dispatch
+jobs:
+  foo-job:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - directory: foo_dir
+            config: Debug
+          - directory: ${{ format('{0}/foo/bar', github.workspace) }}
+            config: Release
+    steps:
+      - run: echo "Matrix - Directory ${{ matrix.directory }}, Config ${{ matrix.config }}"
+      - run: echo ${{ format('Workspace is {0}', github.workspace) }}
