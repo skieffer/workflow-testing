@@ -1,0 +1,16 @@
+name: matrix1d
+on: workflow_dispatch
+jobs:
+  job2:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - project: foo
+            config: ${{
+                  format('foo-{0}-spam', 'bar')
+              }}
+          - project: bar
+            config: Release
+    steps:
+      - run: echo "Matrix - Project ${{ matrix.project }}, Config ${{ matrix.config }}"
