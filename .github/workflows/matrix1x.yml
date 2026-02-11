@@ -1,0 +1,17 @@
+name: matrix1x
+on: workflow_dispatch
+jobs:
+  foo-job:
+    runs-on: ubuntu-latest
+    env:
+      WKSP: ${{ github.workspace }}
+    strategy:
+      matrix:
+        include:
+          - directory: foo_dir
+            config: Debug
+          - directory: ${{ format('{0}/foo/bar', env.WKSP) }}
+            config: Release
+    steps:
+      - run: echo "Matrix - Directory ${{ matrix.directory }}, Config ${{ matrix.config }}"
+      - run: echo ${{ format('Workspace is {0}', github.workspace) }}
